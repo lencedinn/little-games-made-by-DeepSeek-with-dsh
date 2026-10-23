@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#0b0a0f" />
+<title>骰子地牢 · DICE DELVE</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0;height:100%;overflow:hidden;background:#0b0a0f;color:#e8dfd2;
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,"Segoe UI",system-ui,sans-serif;
+    -webkit-user-select:none;user-select:none;overscroll-behavior:none;
+  }
+  #app{
+    position:fixed;inset:0;display:flex;flex-direction:column;
+    padding:14px 16px 12px;gap:10px;
+    background:radial-gradient(ellipse at 50% 0%,#1a1420 0%,#0b0a0f 55%);
+  }
+  /* ---------- 顶栏 ---------- */
+  #top{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+  #floor{font-size:11px;letter-spacing:.22em;color:#8a7f6d;white-space:nowrap}
+  #hpwrap{flex:1;max-width:260px}
+  .bar{height:10px;border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden;position:relative}
+  .bar i{display:block;height:100%;transition:width .25s ease}
+  #hpbar i{background:linear-gradient(90deg,#e0554d,#f08a5d)}
+  #hptxt{font-size:10px;color:#a99a85;margin-top:3px;letter-spacing:.1em}
+  #chargeWrap{width:120px}
+  #chgbar i{background:linear-gradient(90deg,#6a5cff,#9d8bff)}
+  #chgtxt{font-size:10px;color:#8a7f9d;margin-top:3px;letter-spacing:.1em}
+
+  /* ---------- 敌人 ---------- */
+  #stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0}
+  #enemy{
+    width:min(420px,92vw);border-radius:16px;padding:18px 20px 16px;
+    background:linear-gradient(180deg,#1d1626,#141019);
+    border:1px solid rgba(200,170,255,.14);
+    box-shadow:0 24px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05);
+    transition:transform .12s;
+  }
+  #enemy.hit{transform:translateX(-4px) scale(.99)}
+  #enemy.dead{opacity:.25;transform:scale(.96)}
+  #ename{font-size:17px;font-weight:800;letter-spacing:.08em;color:#f0e6ff}
+  #ehp{font-size:11px;color:#9a8fb0;margin-top:6px;letter-spacing:.1em}
+  #ehpbar i{background:linear-gradient(90deg,#8a5cff,#c86bff)}
+  #intent{
+    margin-top:16px;display:flex;align-items:center;gap:10px;
+    padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  #intent .ico{font-size:20px;line-height:1}
+  #intent .txt{font-size:12px;letter-spacing:.06em;color:#c9bcd8}
+  #intent .txt b{color:#ffd08a;font-size:15px}
+  #eblock{
+    position:absolute;right:18px;top:16px;font-size:12px;color:#7fd3ff;
+    background:rgba(80,180,255,.12);border:1px solid rgba(80,180,255,.3);
+    padding:3px 8px;border-radius:20px;opacity:0;transition:opacity .2s;
+  }
+  #eblock.on{opacity:1}
+
+  /* ---------- 骰子 ---------- */
+  #dice{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;flex:0 0 auto;min-height:56px}
+  .die{
+    width:46px;height:46px;border-radius:11px;background:linear-gradient(160deg,#f6efe4,#d8cdbd);
+    box-shadow:0 4px 0 #9c9284,0 8px 16px rgba(0,0,0,.45);
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    padding:7px;cursor:pointer;transition:transform .1s,box-shadow .1s,opacity .15s;
+    position:relative;
+  }
+  .die:active{transform:translateY(2px);box-shadow:0 2px 0 #9c9284}
+  .die.sel{transform:translateY(-4px);box-shadow:0 4px 0 #c9a24a,0 0 0 3px rgba(255,200,90,.7),0 10px 20px rgba(0,0,0,.5)}
+  .die.used{opacity:0;pointer-events:none}
+  .die i{width:7px;height:7px;border-radius:50%;background:#2b2531;align-self:center;justify-self:center;opacity:0}
+  .die i.on{opacity:1}
+  .die.small{width:34px;height:34px;padding:5px}
+  .die.small i{width:5px;height:5px}
+
+  /* ---------- 投放区 ---------- */
+  #zones{display:flex;gap:10px;flex:0 0 auto}
+  .zone{
+    flex:1;border-radius:14px;padding:10px 12px;min-height:74px;cursor:pointer;
+    background:rgba(255,255,255,.03);border:1.5px dashed rgba(255,255,255,.14);
+    transition:border-color .15s,background .15s,transform .1s;
+  }
+  .zone.hot{border-color:rgba(255,210,120,.85);background:rgba(255,210,120,.07);transform:translateY(-2px)}
+  .zone .zh{display:flex;align-items:baseline;gap:6px;font-size:11px;letter-spacing:.16em;color:#9a8fa8}
+  .zone .zv{margin-left:auto;font-size:17px;font-weight:800;color:#fff;letter-spacing:0}
+  .zone .zd{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;min-height:34px;align-items:center}
+  .zone .empty{font-size:10px;color:#4d4658;letter-spacing:.1em}
+  .zone.atk{border-color:rgba(255,120,90,.28)}
+  .zone.def{border-color:rgba(120,200,255,.28)}
+  .zone.chg{border-color:rgba(160,130,255,.28)}
+
+  /* ---------- 底栏 ---------- */
+  #bottom{display:flex;gap:10px;align-items:center;flex:0 0 auto}
+  #btnEnd{
+    flex:1;padding:15px;border-radius:12px;border:0;cursor:pointer;font-family:inherit;
+    font-size:14px;font-weight:800;letter-spacing:.3em;text-indent:.3em;color:#1a1206;
+    background:linear-gradient(100deg,#ffd08a,#ff9d5c);
+    box-shadow:0 6px 24px rgba(255,160,90,.3);transition:transform .1s,opacity .2s;
+  }
+  #btnEnd:active{transform:translateY(2px)}
+  #btnEnd:disabled{opacity:.35;box-shadow:none;cursor:default}
+  #logline{font-size:11px;color:#8a7f95;letter-spacing:.1em;height:16px;flex:0 0 auto;text-align:center}
+
+  /* ---------- 覆盖层 ---------- */
+  #ov{
+    position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 40%,rgba(20,14,26,.82),rgba(6,5,9,.96));
+    opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s,visibility 0s .3s;padding:20px;
+  }
+  #ov.show{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s,visibility 0s 0s}
+  #panel{width:100%;max-width:420px;text-align:center}
+  #panel h1{margin:0 0 8px;font-size:30px;letter-spacing:.2em;font-weight:800;color:#ffe6bd}
+  #panel h2{margin:0 0 10px;font-size:22px;letter-spacing:.14em;color:#ffd08a}
+  #panel p{font-size:12.5px;line-height:2;color:#9d92a8;margin:0 0 18px}
+  .btn{
+    display:inline-block;padding:13px 38px;border-radius:12px;border:0;cursor:pointer;font-family:inherit;
+    font-size:13px;font-weight:800;letter-spacing:.26em;text-indent:.26em;color:#1a1206;
+    background:linear-gradient(100deg,#ffd08a,#ff9d5c);box-shadow:0 6px 26px rgba(255,160,90,.35);
+  }
+  .cards{display:flex;flex-direction:column;gap:10px;margin:0 0 18px}
+  .card{
+    text-align:left;padding:14px 16px;border-radius:12px;cursor:pointer;font-family:inherit;
+    background:linear-gradient(180deg,#1e1728,#161120);border:1px solid rgba(200,170,255,.16);
+    color:#e8dfd2;transition:transform .12s,border-color .15s,box-shadow .15s;
+  }
+  .card:hover{transform:translateY(-2px);border-color:rgba(255,208,138,.6);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .card b{display:block;font-size:14px;color:#ffe6bd;letter-spacing:.08em;margin-bottom:4px}
+  .card span{font-size:11.5px;color:#9d92a8;line-height:1.6}
+  .hint{font-size:10px;letter-spacing:.16em;color:#4d4658;margin-top:16px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div id="floor">1 - 1</div>
+    <div id="hpwrap">
+      <div class="bar" id="hpbar"><i style="width:100%"></i></div>
+      <div id="hptxt">40 / 40</div>
+    </div>
+    <div id="chargeWrap">
+      <div class="bar" id="chgbar"><i style="width:0%"></i></div>
+      <div id="chgtxt">蓄能 0 / 15</div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <div id="enemy">
+      <div id="eblock">格挡 0</div>
+      <div id="ename">敌人</div>
+      <div class="bar" id="ehpbar" style="margin-top:10px"><i style="width:100%"></i></div>
+      <div id="ehp">20 / 20</div>
+      <div id="intent"><div class="ico">⚔</div><div class="txt">意图</div></div>
+    </div>
+  </div>
+
+  <div id="dice"></div>
+
+  <div id="zones">
+    <div class="zone atk" data-z="atk">
+      <div class="zh">⚔ 攻击<span class="zv" id="zvAtk">0</span></div>
+      <div class="zd" id="zdAtk"><span class="empty">点骰子 → 点这里</span></div>
+    </div>
+    <div class="zone def" data-z="def">
+      <div class="zh">🛡 护盾<span class="zv" id="zvDef">0</span></div>
+      <div class="zd" id="zdDef"><span class="empty">挡住这一击</span></div>
+    </div>
+    <div class="zone chg" data-z="chg">
+      <div class="zh">✦ 蓄能<span class="zv" id="zvChg">0</span></div>
+      <div class="zd" id="zdChg"><span class="empty">攒满 15 自动爆发</span></div>
+    </div>
+  </div>
+
+  <div id="logline"></div>
+  <div id="bottom">
+    <button id="btnEnd">结 束 回 合</button>
+  </div>
+</div>
+
+<div id="ov" class="show"><div id="panel"></div></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================================================================== *
+   *  骰子地牢 · DICE DELVE
+   *  回合制骰子分配 Roguelike：把每回合的 5 颗骰子分配到攻击/护盾/蓄能，
+   *  读敌人的意图，在七场战斗里活下去。
+   * ================================================================== */
+
+  var CHARGE_MAX = 15;
+  var BURST_DMG = 22;
+  var BURST_BLOCK = 12;
+
+  /* ---------------------------- 数据 ---------------------------- */
+
+  var ENEMIES = {
+    rat: { name: '通道鼠', hp: 22, moves: [{ t: 'atk', v: 8 }, { t: 'atk', v: 11 }] },
+    guard: { name: '锈甲兵', hp: 32, moves: [{ t: 'block', v: 8 }, { t: 'atk', v: 12 }] },
+    spider: { name: '毒囊蛛', hp: 26, moves: [{ t: 'atk', v: 6 }, { t: 'poison', v: 4 }] },
+    brute: { name: '石拳', hp: 44, moves: [{ t: 'atk', v: 15 }, { t: 'buff', v: 4 }], elite: true },
+    boss: { name: '地牢之心', hp: 88, moves: [{ t: 'atk', v: 13 }, { t: 'block', v: 10 }, { t: 'atk', v: 18 }], boss: true }
+  };
+
+  var FLOORS = [
+    ['rat', 'guard'],
+    ['spider', 'brute'],
+    ['guard', 'spider'],
+    ['boss']
+  ];
+
+  var REWARDS = [
+    { id: 'hp', name: '强健体魄', desc: '最大生命 +12，并回复 12' },
+    { id: 'die', name: '多一枚骰子', desc: '每回合多掷 1 颗（最多 7 颗）' },
+    { id: 'atk', name: '磨刃', desc: '攻击时额外 +2 伤害' },
+    { id: 'def', name: '厚甲', desc: '护盾时额外 +3 格挡' },
+    { id: 'chg', name: '聚能', desc: '蓄能时额外 +2，爆发伤害 +6' },
+    { id: 'heal', name: '干粮', desc: '立即回复 20 生命' }
+  ];
+
+  /* ---------------------------- 状态 ---------------------------- */
+
+  var R = null;
+
+  function newRun(seed) {
+    R = {
+      hp: 45, maxHp: 45, gold: 0,
+      dice: [], pool: [], assign: { atk: [], def: [], chg: [] },
+      block: 0, charge: 0, poison: 0,
+      atkBonus: 0, defBonus: 0, chgBonus: 0, burstBonus: 0,
+      dieCount: 5,
+      floor: 0, enc: 0,
+      enemy: null,
+      phase: 'roll',
+      relics: [],
+      rng: seed === undefined ? Math.random : mulberry32(seed),
+      log: ''
+    };
+    startFight();
+    return R;
+  }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function ri(rng, n) { return Math.floor(rng() * n); }
+
+  function startFight() {
+    var id = FLOORS[R.floor][R.enc];
+    var base = ENEMIES[id];
+    var scale = 1 + R.floor * 0.18;
+    var e = {
+      id: id, name: base.name,
+      hp: Math.round(base.hp * scale),
+      maxHp: Math.round(base.hp * scale),
+      dmgBonus: R.floor * 1,
+      moves: base.moves, mi: 0,
+      block: 0, pow: 0,
+      elite: !!base.elite, boss: !!base.boss
+    };
+    e.mi = ri(R.rng, e.moves.length);
+    R.enemy = e;
+    R.block = 0; R.charge = 0; R.poison = 0;
+    R.pool = [];
+    R.sel = -1;
+    R.assign = { atk: [], def: [], chg: [] };
+    rollDice();
+    R.phase = 'assign';
+    log(e.boss ? '地牢之心苏醒了。' : '一个' + e.name + '挡住了去路。');
+  }
+
+  function rollDice() {
+    R.dice = [];
+    for (var i = 0; i < R.dieCount; i++) R.dice.push(1 + ri(R.rng, 6));
+  }
+
+  function intentOf(e) { return e.moves[e.mi % e.moves.length]; }
+
+  function intentText(e) {
+    var m = intentOf(e);
+    if (m.t === 'atk') return { ico: '⚔', txt: '将要攻击 <b>' + (m.v + e.pow + e.dmgBonus) + '</b>' };
+    if (m.t === 'block') return { ico: '🛡', txt: '将要获得 <b>' + m.v + '</b> 格挡' };
+    if (m.t === 'buff') return { ico: '⬆', txt: '将要强化攻击 <b>+' + m.v + '</b>' };
+    if (m.t === 'poison') return { ico: '☠', txt: '将要施加 <b>' + m.v + '</b> 中毒' };
+    return { ico: '?', txt: '未知' };
+  }
+
+  /* ---------------------------- 核心结算 ---------------------------- */
+
+  function sumOf(idx, dice) {
+    var s = 0;
+    for (var i = 0; i < idx.length; i++) s += dice[idx[i]];
+    return s;
+  }
+
+  function dealToEnemy(n) {
+    var e = R.enemy;
+    if (e.block > 0) {
+      var absorbed = Math.min(e.block, n);
+      e.block -= absorbed;
+      n -= absorbed;
+    }
+    e.hp = Math.max(0, e.hp - n);
+    return n;
+  }
+
+  function resolveTurn() {
+    if (R.phase !== 'assign') return;
+    R.phase = 'resolve';
+
+    var atk = sumOf(R.assign.atk, R.dice) + (R.assign.atk.length ? R.atkBonus : 0);
+    var def = sumOf(R.assign.def, R.dice) + (R.assign.def.length ? R.defBonus : 0);
+    var chg = sumOf(R.assign.chg, R.dice) + (R.assign.chg.length ? R.chgBonus : 0);
+
+    var parts = [];
+    if (atk > 0) {
+      var dealt = dealToEnemy(atk);
+      parts.push('造成 ' + dealt + ' 伤害');
+    }
+    if (def > 0) { R.block += def; parts.push('获得 ' + def + ' 格挡'); }
+    if (chg > 0) {
+      R.charge += chg;
+      parts.push('蓄能 +' + chg);
+    }
+    if (R.charge >= CHARGE_MAX) {
+      R.charge -= CHARGE_MAX;
+      var burst = BURST_DMG + R.burstBonus;
+      dealToEnemy(burst);
+      R.block += BURST_BLOCK;
+      parts.push('⚡ 爆发 ' + burst + ' 伤害 +' + BURST_BLOCK + ' 格挡');
+    }
+    log(parts.length ? parts.join(' · ') : '这一回合你什么也没做。');
+
+    if (R.enemy.hp <= 0) { winFight(); return; }
+
+    /* 敌人行动 */
+    var e = R.enemy;
+    var m = intentOf(e);
+    e.block = 0;
+    var eLog = '';
+    if (m.t === 'atk') {
+      var dmg = m.v + e.pow + e.dmgBonus;
+      var taken = Math.max(0, dmg - R.block);
+      R.block = Math.max(0, R.block - dmg);
+      if (taken > 0) { R.hp -= taken; eLog = e.name + ' 造成 ' + taken + ' 伤害'; }
+      else eLog = '你完全挡下了这一击';
+    } else if (m.t === 'block') {
+      e.block += m.v;
+      eLog = e.name + ' 获得 ' + m.v + ' 格挡';
+    } else if (m.t === 'buff') {
+      e.pow += m.v;
+      eLog = e.name + ' 攻击力 +' + m.v;
+    } else if (m.t === 'poison') {
+      R.poison += m.v;
+      eLog = '你中毒了（' + m.v + ' 层）';
+    }
+    e.mi++;
+    log(eLog);
+
+    if (R.poison > 0 && R.hp > 0) {
+      R.hp -= R.poison;
+      log('中毒造成 ' + R.poison + ' 伤害');
+      R.poison--;
+    }
+
+    if (R.hp <= 0) { R.hp = 0; die(); return; }
+
+    nextTurn();
+  }
+
+  function nextTurn() {
+    R.sel = -1;
+    R.block = 0;
+    R.assign = { atk: [], def: [], chg: [] };
+    R.pool = [];
+    rollDice();
+    R.enemy.mi = R.enemy.mi; /* 意图已经是下一个 */
+    R.phase = 'assign';
+    render();
+  }
+
+  function winFight() {
+    R.phase = 'reward';
+    render();
+    offerRewards();
+  }
+
+  function die() {
+    R.phase = 'dead';
+    render();
+    showPanel(
+      '<h1>倒 下 了</h1>' +
+      '<p>你走到了第 ' + (R.floor + 1) + ' 层第 ' + (R.enc + 1) + ' 场。<br>' +
+      '蓄能 ' + R.charge + ' · 生命 ' + Math.max(0, R.hp) + '</p>' +
+      '<button class="btn" id="btnRestart">再 来 一 次</button>',
+      function () { document.getElementById('btnRestart').onclick = function () { newRun(); hidePanel(); render(); }; }
+    );
+  }
+
+  function advance() {
+    R.enc++;
+    if (R.enc >= FLOORS[R.floor].length) {
+      R.enc = 0;
+      R.floor++;
+    }
+    if (R.floor >= FLOORS.length) { victory(); return; }
+    startFight();
+    render();
+  }
+
+  function victory() {
+    R.phase = 'win';
+    showPanel(
+      '<h1>通 关</h1>' +
+      '<p>地牢之心停止了跳动。<br>剩余生命 ' + R.hp + ' / ' + R.maxHp + '</p>' +
+      '<button class="btn" id="btnAgain">再 来 一 次</button>',
+      function () { document.getElementById('btnAgain').onclick = function () { newRun(); hidePanel(); render(); }; }
+    );
+  }
+
+  /* ---------------------------- 奖励 ---------------------------- */
+
+  function offerRewards() {
+    var picks = [], pool = REWARDS.slice();
+    for (var i = 0; i < 3 && pool.length; i++) {
+      var k = ri(R.rng, pool.length);
+      picks.push(pool.splice(k, 1)[0]);
+    }
+    var html = '<h2>战 利 品</h2><div class="cards">';
+    for (var j = 0; j < picks.length; j++) {
+      html += '<button class="card" data-id="' + picks[j].id + '"><b>' + picks[j].name + '</b><span>' + picks[j].desc + '</span></button>';
+    }
+    html += '</div>';
+    showPanel(html, function () {
+      var els = document.querySelectorAll('.card');
+      for (var q = 0; q < els.length; q++) {
+        els[q].onclick = (function (id) {
+          return function () { takeReward(id); hidePanel(); advance(); };
+        })(els[q].getAttribute('data-id'));
+      }
+    });
+  }
+
+  function takeReward(id) {
+    if (id === 'hp') { R.maxHp += 12; R.hp = Math.min(R.maxHp, R.hp + 12); }
+    else if (id === 'die') { R.dieCount = Math.min(7, R.dieCount + 1); }
+    else if (id === 'atk') { R.atkBonus += 2; }
+    else if (id === 'def') { R.defBonus += 3; }
+    else if (id === 'chg') { R.chgBonus += 2; R.burstBonus += 6; }
+    else if (id === 'heal') { R.hp = Math.min(R.maxHp, R.hp + 20); }
+    R.relics.push(id);
+  }
+
+  /* ---------------------------- 渲染 ---------------------------- */
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function pips(v) {
+    var map = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+    var on = map[v] || [];
+    var out = '';
+    for (var i = 1; i <= 9; i++) out += '<i class="' + (on.indexOf(i) >= 0 ? 'on' : '') + '"></i>';
+    return out;
+  }
+
+  function dieEl(v, cls) {
+    var d = document.createElement('div');
+    d.className = 'die ' + (cls || '');
+    d.innerHTML = pips(v);
+    return d;
+  }
+
+  function render() {
+    if (!R || !R.enemy) return;
+    var e = R.enemy;
+
+    $('floor').textContent = (R.floor + 1) + ' - ' + (R.enc + 1) + ' / ' + FLOORS[R.floor].length;
+    $('hpbar').firstElementChild.style.width = Math.max(0, R.hp / R.maxHp * 100) + '%';
+    $('hptxt').textContent = Math.max(0, R.hp) + ' / ' + R.maxHp + (R.poison > 0 ? '  ☠' + R.poison : '');
+    $('chgbar').firstElementChild.style.width = Math.min(100, R.charge / CHARGE_MAX * 100) + '%';
+    $('chgtxt').textContent = '蓄能 ' + R.charge + ' / ' + CHARGE_MAX;
+
+    $('ename').textContent = e.name + (e.elite ? ' · 精英' : '') + (e.boss ? ' · BOSS' : '');
+    $('ehpbar').firstElementChild.style.width = Math.max(0, e.hp / e.maxHp * 100) + '%';
+    $('ehp').textContent = e.hp + ' / ' + e.maxHp;
+    var it = intentText(e);
+    $('intent').innerHTML = '<div class="ico">' + it.ico + '</div><div class="txt">' + it.txt + '</div>';
+    var eb = $('eblock');
+    eb.textContent = '格挡 ' + e.block;
+    eb.className = e.block > 0 ? 'on' : '';
+
+    /* 骰子池 */
+    var pool = $('dice');
+    pool.innerHTML = '';
+    for (var i = 0; i < R.dice.length; i++) {
+      if (R.assign.atk.indexOf(i) >= 0 || R.assign.def.indexOf(i) >= 0 || R.assign.chg.indexOf(i) >= 0) continue;
+      var d = dieEl(R.dice[i], R.sel === i ? 'sel' : '');
+      d.setAttribute('data-i', i);
+      d.onclick = (function (idx) { return function () { pickDie(idx); }; })(i);
+      pool.appendChild(d);
+    }
+
+    /* 三个区 */
+    zoneRender('atk', 'zdAtk', 'zvAtk');
+    zoneRender('def', 'zdDef', 'zvDef');
+    zoneRender('chg', 'zdChg', 'zvChg');
+
+    $('btnEnd').disabled = R.phase !== 'assign';
+    $('logline').textContent = R.log || '';
+    $('enemy').className = R.phase === 'reward' ? 'dead' : '';
+  }
+
+  function zoneRender(key, boxId, valId) {
+    var box = $(boxId), val = $(valId);
+    box.innerHTML = '';
+    var list = R.assign[key];
+    var total = sumOf(list, R.dice);
+    var bonus = key === 'atk' ? R.atkBonus : key === 'def' ? R.defBonus : R.chgBonus;
+    total += list.length ? bonus : 0;
+    val.textContent = total > 0 ? total : 0;
+    if (!list.length) {
+      box.innerHTML = '<span class="empty">' + (key === 'atk' ? '点骰子 → 点这里' : key === 'def' ? '挡住这一击' : '攒满 ' + CHARGE_MAX + ' 自动爆发') + '</span>';
+      return;
+    }
+    for (var i = 0; i < list.length; i++) {
+      var idx = list[i];
+      var d = dieEl(R.dice[idx], 'small');
+      d.onclick = (function (ii) { return function (ev) { ev.stopPropagation(); unassign(ii); }; })(idx);
+      box.appendChild(d);
+    }
+  }
+
+  function pickDie(idx) {
+    if (R.phase !== 'assign') return;
+    R.sel = (R.sel === idx) ? -1 : idx;
+    render();
+  }
+
+  function assignTo(zone) {
+    if (R.phase !== 'assign' || R.sel === undefined || R.sel < 0) return;
+    var idx = R.sel;
+    R.assign.atk = R.assign.atk.filter(function (x) { return x !== idx; });
+    R.assign.def = R.assign.def.filter(function (x) { return x !== idx; });
+    R.assign.chg = R.assign.chg.filter(function (x) { return x !== idx; });
+    R.assign[zone].push(idx);
+    R.sel = -1;
+    sfx(zone === 'atk' ? 210 : zone === 'def' ? 320 : 420);
+    render();
+  }
+
+  function unassign(idx) {
+    R.assign.atk = R.assign.atk.filter(function (x) { return x !== idx; });
+    R.assign.def = R.assign.def.filter(function (x) { return x !== idx; });
+    R.assign.chg = R.assign.chg.filter(function (x) { return x !== idx; });
+    render();
+  }
+
+  /* ---------------------------- 覆盖层 ---------------------------- */
+
+  function showPanel(html, bind) {
+    $('panel').innerHTML = html;
+    $('ov').classList.add('show');
+    if (bind) bind();
+  }
+  function hidePanel() { $('ov').classList.remove('show'); }
+
+  /* ---------------------------- 音效 ---------------------------- */
+
+  var AC = null, MASTER = null;
+  function initAudio() {
+    if (AC) return;
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    AC = new C();
+    MASTER = AC.createGain();
+    MASTER.gain.value = 0.35;
+    MASTER.connect(AC.destination);
+  }
+  function sfx(freq) {
+    if (!AC) return;
+    var t = AC.currentTime;
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.25, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    o.connect(g); g.connect(MASTER);
+    o.start(t); o.stop(t + 0.14);
+  }
+  function sfxHit() {
+    if (!AC) return;
+    var t = AC.currentTime;
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(140, t);
+    o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+    g.gain.setValueAtTime(0.3, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    o.connect(g); g.connect(MASTER);
+    o.start(t); o.stop(t + 0.22);
+  }
+
+  /* ---------------------------- 启动 ---------------------------- */
+
+  function log(s) { R.log = s; }
+
+  $('btnEnd').onclick = function () {
+    initAudio();
+    resolveTurn();
+    if (R.phase === 'assign') render();
+  };
+
+  var zoneEls = document.querySelectorAll('.zone');
+  for (var zi = 0; zi < zoneEls.length; zi++) {
+    zoneEls[zi].onclick = (function (z) {
+      return function () { assignTo(z); };
+    })(zoneEls[zi].getAttribute('data-z'));
+  }
+
+  window.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (R && R.phase === 'assign') { document.getElementById('btnEnd').click(); }
+      else {
+        var b = document.querySelector('#panel .btn');
+        if (b) b.click();
+      }
+    }
+  });
+
+  function showIntro() {
+    showPanel(
+      '<h1>骰 子 地 牢</h1>' +
+      '<p>每回合掷 <b>5 颗骰子</b>，把它们分配成 <b>攻击</b>、<b>护盾</b> 或 <b>蓄能</b>。<br>' +
+      '敌人的下一步是公开的 —— 算好再放。<br>' +
+      '蓄能满 15 会自动爆发。</p>' +
+      '<button class="btn" id="btnStart">进 入 地 牢</button>',
+      function () {
+        document.getElementById('btnStart').onclick = function () {
+          initAudio();
+          hidePanel();
+          newRun();
+          render();
+        };
+      }
+    );
+  }
+
+  if (window.__DD_TEST) {
+    window.__DD = {
+      R: function () { return R; },
+      newRun: newRun, resolveTurn: resolveTurn,
+      assignTo: assignTo, pickDie: pickDie,
+      sumOf: sumOf, intentOf: intentOf, takeReward: takeReward,
+      FLOORS: FLOORS, ENEMIES: ENEMIES, REWARDS: REWARDS,
+      startFight: startFight, advance: advance, render: render, CHARGE_MAX: CHARGE_MAX
+    };
+  }
+
+  showIntro();
+})();
+</script>
+</body>
+</html>
