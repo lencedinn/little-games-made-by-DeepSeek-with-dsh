@@ -16,6 +16,8 @@ Each game has a **中文 / EN** toggle in the top-right corner. It picks your br
 
 ## 1. NEON DODGE
 
+![NEON DODGE](shots/neon-dodge.png)
+
 Top-down neon arcade. Blocks rain down; you survive by *grazing* them — shaving past a block's edge builds a combo multiplier that breaks 3.4 s after your last graze.
 
 - **Move** — drag with mouse or finger (1:1 horizontal, the ship lives in a narrow band at the bottom)
@@ -29,6 +31,8 @@ Keys: `P` pause · `M` mute · `S` shake · `F` fps · `L` perf mode · `Enter` 
 ---
 
 ## 2. LUMEN
+
+![LUMEN](shots/lumen.png)
 
 A turn-based puzzle. Rotate mirrors to route the beam from the source into every core. No timers, no failure states — only move count.
 
@@ -52,6 +56,8 @@ Click a mirror to rotate it 45°; the beam redraws immediately. Clear the level 
 ---
 
 ## 3. DICE DELVE
+
+![DICE DELVE](shots/dice-delve.png)
 
 A turn-based dice-allocation roguelike. Each turn you roll 5 dice and assign them to three actions:
 

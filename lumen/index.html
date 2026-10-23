@@ -1537,9 +1537,9 @@
     btn.setAttribute('data-i18n-skip', '1');
     btn.textContent = LANG === 'en' ? '中文' : 'EN';
     btn.title = LANG === 'en' ? '切换中文' : 'Switch to English';
-    btn.style.cssText = 'position:fixed;right:12px;top:10px;z-index:999;' +
-      'padding:5px 9px;border-radius:7px;cursor:pointer;font:700 11px/1 system-ui,sans-serif;' +
-      'letter-spacing:.06em;opacity:.72;transition:opacity .2s;' +
+    btn.style.cssText = 'position:fixed;left:8px;top:50%;transform:translateY(-50%);z-index:999;' +
+      'padding:6px 7px;border-radius:7px;cursor:pointer;font:700 10px/1 system-ui,sans-serif;' +
+      'letter-spacing:.04em;opacity:.55;transition:opacity .2s;' +
       'color:#dfe9f2;background:rgba(16,18,26,.75);border:1px solid rgba(180,200,220,.3)';
     btn.onmouseenter = function () { btn.style.opacity = '1'; };
     btn.onmouseleave = function () { btn.style.opacity = '.72'; };
