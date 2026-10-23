@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#05070d" />
+<title>光路 · LUMEN</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0;height:100%;overflow:hidden;background:#05070d;color:#d9ecf5;
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,"Segoe UI",system-ui,sans-serif;
+    -webkit-user-select:none;user-select:none;overscroll-behavior:none;
+  }
+  #cv{display:block;position:fixed;inset:0;touch-action:none;cursor:pointer}
+  #hud{
+    position:fixed;top:0;left:0;right:0;padding:18px 22px;z-index:5;pointer-events:none;
+    display:flex;justify-content:space-between;align-items:flex-start;
+  }
+  .k{font-size:9px;letter-spacing:.34em;color:#3f6478;margin-bottom:4px}
+  .v{font-size:26px;font-weight:800;line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  #lv{color:#bfefff}
+  #stars{margin-top:7px;font-size:12px;letter-spacing:.3em;color:#2f8ba8}
+  #stars b{color:#7bf0d0;font-weight:400;text-shadow:0 0 12px rgba(123,240,208,.7)}
+  #right{text-align:right}
+  #mv{color:#eafcff}
+  #par{font-size:10px;letter-spacing:.22em;color:#3f6478;margin-top:6px}
+  #par b{color:#7bf0d0;font-weight:700}
+  #foot{
+    position:fixed;left:0;right:0;bottom:14px;text-align:center;z-index:5;pointer-events:none;
+    font-size:10px;letter-spacing:.16em;color:#33525f;
+  }
+  #btnmap{
+    position:fixed;right:18px;bottom:18px;z-index:6;width:42px;height:42px;border-radius:2px;
+    background:rgba(10,20,30,.72);border:1px solid rgba(90,190,220,.25);color:#7fe6ff;
+    font-size:15px;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;transition:.18s;
+  }
+  #btnmap:hover{border-color:rgba(123,240,208,.7);color:#c8fff2;box-shadow:0 0 22px rgba(123,240,208,.25)}
+  .mapgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:0 0 12px;max-height:52vh;overflow-y:auto;padding-right:4px}
+  .mapbtn{
+    aspect-ratio:1;border-radius:2px;border:1px solid rgba(90,190,220,.2);
+    background:rgba(12,22,34,.8);color:#8fc0d4;font-family:inherit;font-size:13px;
+    font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:1px;transition:.15s;padding:0;
+  }
+  .mapbtn:hover{border-color:rgba(123,240,208,.6);color:#dffff6}
+  .mapbtn.lock{opacity:.22;cursor:default}
+  .mapbtn.now{border-color:#7bf0d0;color:#eafffb;box-shadow:0 0 16px rgba(123,240,208,.35)}
+  .mapbtn i{font-style:normal;font-size:7px;color:#7bf0d0;line-height:1;letter-spacing:0}
+
+  #overlay{
+    position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 45%,rgba(8,14,26,.72),rgba(3,5,10,.95));
+    opacity:0;visibility:hidden;pointer-events:none;padding:22px;overflow:auto;
+    transition:opacity .35s,visibility 0s .35s;
+  }
+  #overlay.show{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .35s,visibility 0s 0s}
+  #panel{width:100%;max-width:400px;text-align:center;padding:8px}
+  h1{
+    margin:0 0 6px;font-size:44px;font-weight:200;letter-spacing:.34em;text-indent:.34em;
+    background:linear-gradient(100deg,#9ff6ff,#7bf0d0 55%,#9d8bff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 24px rgba(120,240,220,.35));
+  }
+  .sub{font-size:9px;letter-spacing:.52em;color:#3f6478;margin-bottom:26px;text-indent:.52em}
+  #panel p{font-size:12.5px;line-height:2.1;color:#8fb4c4;margin:0 0 20px}
+  .btn{
+    display:inline-block;margin:0;padding:13px 44px;border-radius:2px;cursor:pointer;font-family:inherit;
+    font-size:12px;font-weight:700;letter-spacing:.36em;text-indent:.36em;color:#04121a;
+    background:linear-gradient(100deg,#9ff6ff,#7bf0d0);border:0;
+    box-shadow:0 0 40px rgba(123,240,208,.35);transition:transform .14s,box-shadow .2s;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 0 56px rgba(123,240,208,.55)}
+  .btn:active{transform:scale(.97)}
+  .daily{
+    display:block;width:100%;margin:0 0 14px;padding:13px 16px;border-radius:2px;cursor:pointer;
+    background:linear-gradient(100deg,rgba(123,240,208,.12),rgba(157,139,255,.12));
+    border:1px solid rgba(123,240,208,.32);color:#dffff6;font-family:inherit;
+    font-size:12px;letter-spacing:.16em;transition:.18s;text-align:left;
+  }
+  .daily:hover{border-color:rgba(123,240,208,.8);box-shadow:0 0 26px rgba(123,240,208,.22)}
+  .daily i{float:right;font-style:normal;color:#7bf0d0;font-size:11px;letter-spacing:.1em}
+  .link{margin-top:16px;font-size:11px;letter-spacing:.24em;color:#3f6478;cursor:pointer;transition:.15s}
+  .link:hover{color:#7bf0d0}
+  .link.danger{color:#7a4a4a}
+  .link.danger:hover{color:#ff8a8a}
+  .link.armed{color:#ff8a8a;letter-spacing:.14em}
+  .hintline{font-size:9px;letter-spacing:.22em;color:#2f4a58;margin-top:22px;line-height:2}
+  .bigstars{font-size:40px;letter-spacing:.28em;text-indent:.28em;margin:4px 0 10px;color:#1d3742}
+  .bigstars b{color:#7bf0d0;font-weight:400;text-shadow:0 0 26px rgba(123,240,208,.8)}
+  .row{display:flex;justify-content:center;gap:44px;margin:0 0 22px}
+  .row div{font-size:11px;letter-spacing:.2em;color:#3f6478}
+  .row b{display:block;font-size:24px;font-weight:800;color:#eafcff;letter-spacing:0;margin-bottom:5px;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div class="k">LEVEL</div>
+    <div class="v" id="lv">01</div>
+    <div id="stars"></div>
+  </div>
+  <div id="right">
+    <div class="k">MOVES</div>
+    <div class="v" id="mv">0</div>
+    <div id="par">PAR <b>0</b></div>
+  </div>
+</div>
+<div id="foot">点击镜面旋转 &nbsp;·&nbsp; Z 撤销 &nbsp;·&nbsp; R 重开本关 &nbsp;·&nbsp; H 提示 &nbsp;·&nbsp; ⊞ 选关</div>
+
+<button id="btnmap" title="选关">&#9638;</button>
+<div id="overlay" class="show"><div id="panel"></div></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================================================================== *
+   *  光路 · LUMEN
+   *  回合制光路解谜：旋转镜面，把光从光源送到核心。
+   *  每一关都由「构造路径 → 打乱 → 穷举验证」生成，保证一定可解，
+   *  PAR 是最优步数（穷举所有 2^n 种朝向得出）。
+   * ================================================================== */
+
+  var TAU = Math.PI * 2;
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  var RNG = null;
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function rnd() { return RNG ? RNG() : Math.random(); }
+  function ri(n) { return Math.floor(rnd() * n); }
+
+  function dailyKey() {
+    var d = new Date();
+    var m = d.getMonth() + 1, dd = d.getDate();
+    return '' + d.getFullYear() + (m < 10 ? '0' + m : m) + (dd < 10 ? '0' + dd : dd);
+  }
+
+  function buildDaily() {
+    var key = dailyKey();
+    var seed = parseInt(key, 10);
+    var lvl = 10 + (seed % 16);
+    RNG = mulberry32(seed);
+    var data = buildLevel(lvl);
+    RNG = null;
+    return { data: data, key: key, lvl: lvl };
+  }
+
+  function fmt(n) { return n < 10 ? '0' + n : '' + n; }
+
+  /* ---------------------------- DOM ---------------------------- */
+
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var lvEl = document.getElementById('lv');
+  var mvEl = document.getElementById('mv');
+  var parEl = document.querySelector('#par b');
+  var starsEl = document.getElementById('stars');
+  var overlay = document.getElementById('overlay');
+  var panel = document.getElementById('panel');
+  var btnmap = document.getElementById('btnmap');
+
+  var W = 0, H = 0, DPR = 1;
+  var bgGrad = null, vigGrad = null, dust = [];
+
+  /* ---------------------------- 存档 ---------------------------- */
+
+  var KEY = 'lumen.v1';
+  var save = { level: 1, stars: {} };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var p = JSON.parse(raw);
+      if (p.level) save.level = p.level;
+      if (p.stars) save.stars = p.stars;
+    }
+  } catch (e) { }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { } }
+
+  /* ---------------------------- 音频 ---------------------------- */
+
+  var Sound = (function () {
+    var ac = null, out = null, padBus = null, sfxBus = null, timer = null, chord = 0;
+    var on = true;
+    var CHORDS = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]; /* Am F C G */
+
+    function init() {
+      if (ac) return ac;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ac = new AC();
+      out = ac.createGain(); out.gain.value = 0.7; out.connect(ac.destination);
+      padBus = ac.createGain(); padBus.gain.value = 0.5; padBus.connect(out);
+      sfxBus = ac.createGain(); sfxBus.gain.value = 0.4; sfxBus.connect(out);
+      return ac;
+    }
+    function resume() { if (ac && ac.state === 'suspended') ac.resume(); }
+
+    function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+    function pad() {
+      if (!ac) return;
+      var t = ac.currentTime;
+      var notes = CHORDS[chord % CHORDS.length];
+      chord++;
+      for (var i = 0; i < notes.length; i++) {
+        var o = ac.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = mtof(notes[i]);
+        o.detune.value = (Math.random() - 0.5) * 6;
+        var g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.075, t + 1.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 6.4);
+        o.connect(g); g.connect(padBus);
+        o.start(t); o.stop(t + 6.6);
+      }
+    }
+
+    function blip(f, dur, type, vol, slide) {
+      if (!ac || !on) return;
+      var t = ac.currentTime;
+      var o = ac.createOscillator();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+      var g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.3, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(sfxBus);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+
+    return {
+      start: function () {
+        init(); resume();
+        if (!ac || timer) return;
+        pad();
+        timer = setInterval(pad, 5200);
+      },
+      click: function () { blip(1200 + Math.random() * 300, 0.06, 'triangle', 0.18, 720); },
+      connect: function () { blip(880, 0.5, 'sine', 0.22, 1320); blip(1320, 0.6, 'triangle', 0.12, 1760); },
+      win: function () { [523, 659, 784, 1046].forEach(function (f, i) { setTimeout(function () { blip(f, 0.5, 'sine', 0.16); }, i * 90); }); },
+      fail: function () { blip(220, 0.18, 'sine', 0.12, 160); },
+      toggle: function (v) { on = v; }
+    };
+  })();
+
+  /* =========================== 关卡数据 =========================== */
+
+  var EMPTY = 0, WALL = 1, MIRROR = 2, SRC = 3, TGT = 4, PRISM = 5, PORTAL = 6;
+
+  /* 单位方向反射：
+     '/'  把 (dx,dy) 变成 (-dy,-dx)
+     '\'  把 (dx,dy) 变成 ( dy, dx)                        */
+
+  function reflect(dx, dy, ori) {
+    return ori === 1 ? [dy, dx] : [-dy, -dx];
+  }
+
+  function trace(cells, w, h, ori, id, sx, sy, pm) {
+    var segs = [], litSet = {}, need = 0, litN = 0;
+    for (var i = 0; i < cells.length; i++) if (cells[i] === TGT) need++;
+
+    var stack = [{ x: sx, y: sy, dx: 1, dy: 0 }];
+    var seen = {}, guard = 0;
+
+    while (stack.length && guard++ < 400) {
+      var b = stack.pop();
+      var x = b.x, y = b.y, dx = b.dx, dy = b.dy;
+      var pts = [{ x: x, y: y }];
+
+      for (var n = 0; n < 200; n++) {
+        var key = x + '|' + y + '|' + dx + '|' + dy;
+        if (seen[key]) break;
+        seen[key] = 1;
+        x += dx; y += dy;
+        if (x < 0 || y < 0 || x >= w || y >= h) { pts.push({ x: x, y: y, out: 1 }); break; }
+        var c = cells[y * w + x];
+        pts.push({ x: x, y: y });
+        if (c === WALL) break;
+        if (c === TGT) {
+          var ti = y * w + x;
+          if (!litSet[ti]) { litSet[ti] = 1; litN++; }
+          break;
+        }
+        if (c === MIRROR) {
+          var d = reflect(dx, dy, ori[id[y * w + x]]);
+          dx = d[0]; dy = d[1];
+        } else if (c === PRISM) {
+          var d2 = reflect(dx, dy, ori[id[y * w + x]]);
+          stack.push({ x: x, y: y, dx: d2[0], dy: d2[1] });
+        } else if (c === PORTAL && pm) {
+          var partner = pm[y * w + x];
+          if (partner >= 0) {
+            segs.push(pts);
+            var qx = partner % w, qy = (partner - qx) / w;
+            pts = [{ x: qx, y: qy }];
+            x = qx; y = qy;
+          }
+        }
+      }
+      segs.push(pts);
+    }
+    return { win: need > 0 && litN >= need, litSet: litSet, lit: litN, need: need, segs: segs };
+  }
+
+  function popcount(n) { var c = 0; while (n) { c += n & 1; n >>= 1; } return c; }
+
+  /* ---------------- 生成：先构造一条光路，再打乱 ---------------- */
+
+  function buildLevel(level) {
+    var w = clamp(7 + Math.floor((level - 1) / 3), 7, 12);
+    var h = clamp(5 + Math.floor((level - 1) / 5), 5, 8);
+    var wantPar = clamp(2 + Math.floor(level / 4), 2, 6);
+
+    for (var attempt = 0; attempt < 340; attempt++) {
+      var cells = new Int8Array(w * h);
+      var id = new Int16Array(w * h); id.fill(-1);
+      var mirrors = [];
+      var walk = [];
+      var pm = new Int32Array(w * h); pm.fill(-1);
+      var portalDone = false;
+      var wantPortal = level >= 25 ? true : (level >= 9 && rnd() < 0.55);
+
+      var sy = 1 + ri(h - 2);
+      cells[sy * w] = SRC;
+
+      var x = 0, y = sy, dx = 1, dy = 0;
+      var turns = 2 + ri(2);
+      var bad = false;
+
+      for (var t = 0; t < turns; t++) {
+        var maxS = dx > 0 ? (w - 2 - x) : dx < 0 ? (x - 1) : dy > 0 ? (h - 1 - y) : y;
+        if (maxS < 2) { bad = true; break; }
+        var steps = 2 + ri(Math.min(3, maxS - 1));
+        for (var s = 0; s < steps; s++) {
+          x += dx; y += dy;
+          if (x < 1 || y < 0 || x >= w - 1 || y >= h) { bad = true; break; }
+          if (cells[y * w + x] !== EMPTY) { bad = true; break; }
+          walk.push({ x: x, y: y, dx: dx, dy: dy });
+
+          if (wantPortal && !portalDone && s === 1) {
+            var q = null;
+            for (var qt = 0; qt < 36; qt++) {
+              var qx2 = 1 + ri(w - 2), qy2 = ri(h);
+              if (cells[qy2 * w + qx2] !== EMPTY) continue;
+              if (Math.abs(qx2 - x) + Math.abs(qy2 - y) < 4) continue;
+              var aheadOk = true;
+              for (var qa = 1; qa <= 2; qa++) {
+                var ax2 = qx2 + dx * qa, ay2 = qy2 + dy * qa;
+                if (ax2 < 1 || ay2 < 0 || ax2 >= w - 1 || ay2 >= h) { aheadOk = false; break; }
+                if (cells[ay2 * w + ax2] !== EMPTY) { aheadOk = false; break; }
+              }
+              if (!aheadOk) continue;
+              q = { x: qx2, y: qy2 };
+              break;
+            }
+            if (q) {
+              cells[y * w + x] = PORTAL;
+              cells[q.y * w + q.x] = PORTAL;
+              pm[y * w + x] = q.y * w + q.x;
+              pm[q.y * w + q.x] = y * w + x;
+              x = q.x; y = q.y;
+              walk.push({ x: x, y: y, dx: dx, dy: dy });
+              portalDone = true;
+            }
+          }
+        }
+        if (bad) break;
+        if (cells[y * w + x] !== EMPTY) { bad = true; break; }
+        var ori = ri(2);
+        cells[y * w + x] = MIRROR;
+        id[y * w + x] = mirrors.length;
+        mirrors.push({ x: x, y: y, ori: ori, path: true });
+        var nd = reflect(dx, dy, ori);
+        dx = nd[0]; dy = nd[1];
+        var ax = x + dx, ay = y + dy;
+        if (ax < 1 || ay < 0 || ax >= w - 1 || ay >= h) { bad = true; break; }
+        if (cells[ay * w + ax] !== EMPTY) { bad = true; break; }
+      }
+      if (bad) continue;
+
+      var maxT = dx > 0 ? (w - 1 - x) : dx < 0 ? (x - 1) : dy > 0 ? (h - 1 - y) : y;
+      if (maxT < 2) continue;
+      var td = 2 + ri(Math.min(3, maxT - 1));
+      var tx = x + dx * td, ty = y + dy * td;
+      if (tx < 1 || ty < 0 || tx >= w - 1 || ty >= h) continue;
+      if (cells[ty * w + tx] !== EMPTY) continue;
+      for (var q = 1; q < td; q++) {
+        if (cells[(y + dy * q) * w + (x + dx * q)] !== EMPTY) { bad = true; break; }
+      }
+      if (bad) continue;
+      cells[ty * w + tx] = TGT;
+
+      /* 双核心关：在路上的某格放一面分光镜，90° 分出去的支路通向第二个核心 */
+      if ((level >= 17 || (level >= 6 && rnd() < 0.65)) && walk.length > 4 && mirrors.length >= 2) {
+        for (var tt2 = 0; tt2 < 80; tt2++) {
+          var wi = 1 + ri(walk.length);
+          var wp = walk[wi];
+          if (!wp) continue;
+          var ci2 = wp.y * w + wp.x;
+          if (cells[ci2] !== EMPTY) continue;
+          var side = ri(2);
+          var d4 = reflect(wp.dx, wp.dy, side);
+          var bt = null;
+          for (var dd2 = 4; dd2 >= 1; dd2--) {
+            var bx3 = wp.x + d4[0] * dd2, by3 = wp.y + d4[1] * dd2;
+            if (bx3 < 1 || by3 < 0 || bx3 >= w - 1 || by3 >= h) continue;
+            var clear = true;
+            for (var q4 = 1; q4 <= dd2; q4++) {
+              if (cells[(wp.y + d4[1] * q4) * w + (wp.x + d4[0] * q4)] !== EMPTY) { clear = false; break; }
+            }
+            if (!clear) continue;
+            bt = { x: bx3, y: by3 };
+            break;
+          }
+          if (!bt) continue;
+          cells[ci2] = PRISM;
+          id[ci2] = mirrors.length;
+          mirrors.push({ x: wp.x, y: wp.y, ori: side });
+          cells[bt.y * w + bt.x] = TGT;
+          break;
+        }
+      }
+
+      var decoys = clamp(2 + Math.floor(level / 3), 2, 5);
+      for (var d2 = 0; d2 < decoys; d2++) {
+        for (var tries = 0; tries < 30; tries++) {
+          var rx = 1 + ri(w - 2), ry = ri(h);
+          var ci = ry * w + rx;
+          if (cells[ci] !== EMPTY) continue;
+          cells[ci] = MIRROR;
+          id[ci] = mirrors.length;
+          mirrors.push({ x: rx, y: ry, ori: ri(2), decoy: true });
+          break;
+        }
+      }
+      var walls = clamp(Math.floor(level / 3), 0, 4);
+      for (var ww = 0; ww < walls; ww++) {
+        for (var t2 = 0; t2 < 24; t2++) {
+          var wx = 1 + ri(w - 2), wy = ri(h);
+          if (cells[wy * w + wx] !== EMPTY) continue;
+          cells[wy * w + wx] = WALL;
+          break;
+        }
+      }
+
+
+      var free = [];
+      for (var fi = 0; fi < mirrors.length; fi++) if (!mirrors[fi].fixed) free.push(fi);
+      var K = free.length;
+      if (K < 2 || mirrors.length > 9) continue;
+
+      var baseOri = [];
+      for (var bo = 0; bo < mirrors.length; bo++) baseOri.push(mirrors[bo].fixed ? mirrors[bo].ori : 0);
+
+      function mkOrient(mask) {
+        var t2 = baseOri.slice();
+        for (var z = 0; z < K; z++) t2[free[z]] = (mask >> z) & 1;
+        return t2;
+      }
+
+      var winners = [];
+      for (var mask = 0; mask < (1 << K); mask++) {
+        if (trace(cells, w, h, mkOrient(mask), id, 0, sy, pm).win) winners.push(mask);
+      }
+      if (!winners.length) continue;
+      var cap;
+      if (level <= 3) cap = 999;
+      else if (attempt < 170) cap = 9;
+      else if (attempt < 260) cap = 16;
+      else cap = 999;
+      if (level >= 17 && attempt < 200) cap = Math.min(cap, 5);
+      if (winners.length > cap) continue;
+
+      /* 在所有朝向里挑一个「离最近解法最远」的作为开局，
+         这样最少步数就接近想要的目标，而不是永远 2 步。 */
+      var bestInit = -1, bestDiff = 1e9, bestDist = 0;
+      for (var im = 0; im < (1 << K); im++) {
+        var dmin = 99;
+        for (var wi = 0; wi < winners.length; wi++) {
+          var dd0 = popcount(im ^ winners[wi]);
+          if (dd0 < dmin) dmin = dd0;
+        }
+        if (dmin === 0) continue;
+        var diff = Math.abs(dmin - wantPar);
+        if (diff < bestDiff) { bestDiff = diff; bestInit = im; bestDist = dmin; }
+      }
+      if (bestInit < 0) continue;
+      var floorPar = level <= 8 ? 2 : level <= 16 ? 3 : 4;
+      if (bestDist < floorPar && attempt < 240) continue;
+      if (bestDist < 2) continue;
+
+      var ori0 = [];
+      for (var b2 = 0; b2 < mirrors.length; b2++) {
+        ori0.push(mirrors[b2].fixed ? mirrors[b2].ori : 0);
+      }
+      for (var b3 = 0; b3 < K; b3++) ori0[free[b3]] = (bestInit >> b3) & 1;
+      /* 上锁：只锁「最终光路真的会打到」的镜子，保证它不是装饰品 */
+      if (level >= 12) {
+        var winMask = -1, wd = 99;
+        for (var wi2 = 0; wi2 < winners.length; wi2++) {
+          var dd2 = popcount(bestInit ^ winners[wi2]);
+          if (dd2 < wd) { wd = dd2; winMask = winners[wi2]; }
+        }
+        var solOri = winMask >= 0 ? mkOrient(winMask) : ori0;
+        var beam0 = trace(cells, w, h, solOri, id, 0, sy, pm);
+        var hitC = {};
+        for (var s0 = 0; s0 < beam0.segs.length; s0++) {
+          var sg0 = beam0.segs[s0];
+          for (var p0 = 0; p0 < sg0.length; p0++) {
+            if (!sg0[p0].out) hitC[sg0[p0].y * w + sg0[p0].x] = 1;
+          }
+        }
+        var cand = [];
+        for (var c0 = 0; c0 < mirrors.length; c0++) {
+          if (mirrors[c0].fixed) continue;
+          if (hitC[mirrors[c0].y * w + mirrors[c0].x]) cand.push(c0);
+        }
+        if (cand.length) {
+          var lockIdx = cand[ri(cand.length)];
+          var prevOri = ori0[lockIdx];
+          ori0[lockIdx] = solOri[lockIdx];   /* 开局就把这面摆成解法需要的方向，锁住才不破坏解法 */
+          mirrors[lockIdx].fixed = true;
+          var free2 = [], init2 = 0;
+          for (var q2 = 0; q2 < mirrors.length; q2++) if (!mirrors[q2].fixed) free2.push(q2);
+          for (var q3 = 0; q3 < free2.length; q3++) if (ori0[free2[q3]]) init2 |= (1 << q3);
+          var par2 = 99;
+          for (var m2 = 0; m2 < (1 << free2.length); m2++) {
+            var o2 = ori0.slice();
+            for (var q4 = 0; q4 < free2.length; q4++) o2[free2[q4]] = (m2 >> q4) & 1;
+            if (!trace(cells, w, h, o2, id, 0, sy, pm).win) continue;
+            var d2 = 0, v2 = m2 ^ init2;
+            while (v2) { d2 += v2 & 1; v2 >>= 1; }
+            if (d2 < par2) par2 = d2;
+          }
+          if (par2 >= 2 && par2 < 99) bestDist = par2;
+          else { mirrors[lockIdx].fixed = false; ori0[lockIdx] = prevOri; }
+        }
+      }
+
+      var probe = trace(cells, w, h, ori0, id, 0, sy, pm);
+      if (probe.win) continue;
+      if (probe.segs[0].length < 3) continue;
+
+      for (var mi2 = 0; mi2 < mirrors.length; mi2++) mirrors[mi2].ori = ori0[mi2];
+
+      return {
+        w: w, h: h, cells: cells, id: id, ori: ori0, pm: pm,
+        mirrors: mirrors, par: bestDist, sy: sy, tx: tx, ty: ty
+      };
+    }
+    return null;
+  }
+
+  /* ============================ 状态 ============================ */
+
+  var G = {
+    level: 1, moves: 0, par: 0, won: false, done: false,
+    w: 0, h: 0, cells: null, id: null, ori: null, mirrors: [],
+    beam: null, history: [], winT: 0, cs: 50, ox: 0, oy: 0,
+    hover: -1, t: 0, shake: 0, flash: 0, hintIdx: -1, hintT: 0, t0: 0, fade: 1
+  };
+
+  /* ============================ 布局 ============================ */
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#05070d');
+    bgGrad.addColorStop(0.55, '#070b14');
+    bgGrad.addColorStop(1, '#04060b');
+
+    vigGrad = ctx.createRadialGradient(W / 2, H * 0.46, Math.min(W, H) * 0.2, W / 2, H * 0.5, Math.max(W, H) * 0.8);
+    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    vigGrad.addColorStop(1, 'rgba(0,0,0,0.62)');
+
+    dust.length = 0;
+    for (var i = 0; i < 46; i++) {
+      dust.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.4, v: Math.random() * 8 + 3, a: Math.random() });
+    }
+    layout();
+  }
+
+  function layout() {
+    if (!G.w) return;
+    var padX = 34, padTop = 96, padBot = 52;
+    var cs = Math.min((W - padX * 2) / G.w, (H - padTop - padBot) / G.h);
+    cs = clamp(cs, 26, 84);
+    G.cs = cs;
+    G.ox = (W - cs * G.w) / 2;
+    G.oy = padTop + (H - padTop - padBot - cs * G.h) / 2;
+  }
+
+  function cellCenter(x, y) {
+    return { x: G.ox + x * G.cs + G.cs / 2, y: G.oy + y * G.cs + G.cs / 2 };
+  }
+
+  /* ============================ 关卡流程 ============================ */
+
+  /* ---------------- 手工引导关 ---------------- */
+
+  var INTRO = {
+    5: {
+      tip: '分光镜：光会直行通过，同时 90° 分出一束 —— 转动它，让两束各打一个核心',
+      rows: [
+        '.......',
+        '.......',
+        'S..p..T',
+        '.......',
+        '...T...'
+      ]
+    },
+    8: {
+      tip: '传送门：光从一端进入，会从另一端以相同方向射出 —— 用它绕过整面墙',
+      rows: [
+        '.......',
+        '.....O.',
+        'S.m....',
+        '..O....',
+        '.....T.'
+      ]
+    },
+    11: {
+      tip: '灰圈镜面是锁死的，转不动 —— 光路只能绕着它走',
+      rows: [
+        '.......',
+        '..x..T.',
+        'S.n....',
+        '.......'
+      ]
+    }
+  };
+
+  function parseIntro(rows) {
+    var h = rows.length, w = rows[0].length;
+    var cells = new Int8Array(w * h), id = new Int16Array(w * h);
+    id.fill(-1);
+    var pm = new Int32Array(w * h); pm.fill(-1);
+    var mirrors = [], portals = [], sy = 0;
+
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var ch = rows[y].charAt(x);
+        var idx = y * w + x;
+        if (ch === 'S') { cells[idx] = SRC; sy = y; }
+        else if (ch === 'T') cells[idx] = TGT;
+        else if (ch === '#') cells[idx] = WALL;
+        else if (ch === 'O') { cells[idx] = PORTAL; portals.push(idx); }
+        else if (ch === 'm' || ch === 'n' || ch === 'x' || ch === 'y') {
+          cells[idx] = MIRROR;
+          id[idx] = mirrors.length;
+          mirrors.push({
+            x: x, y: y,
+            ori: (ch === 'n' || ch === 'y') ? 1 : 0,
+            fixed: (ch === 'x' || ch === 'y')
+          });
+        } else if (ch === 'p' || ch === 'q') {
+          cells[idx] = PRISM;
+          id[idx] = mirrors.length;
+          mirrors.push({ x: x, y: y, ori: ch === 'q' ? 1 : 0, fixed: false });
+        }
+      }
+    }
+    if (portals.length === 2) {
+      pm[portals[0]] = portals[1];
+      pm[portals[1]] = portals[0];
+    }
+
+    var free = [];
+    for (var i = 0; i < mirrors.length; i++) if (!mirrors[i].fixed) free.push(i);
+    var K = free.length;
+    var ori0 = mirrors.map(function (m) { return m.ori; });
+    var init = 0;
+    for (var j = 0; j < K; j++) if (ori0[free[j]]) init |= (1 << j);
+
+    var best = 99;
+    for (var mask = 0; mask < (1 << K); mask++) {
+      var o = ori0.slice();
+      for (var z = 0; z < K; z++) o[free[z]] = (mask >> z) & 1;
+      if (!trace(cells, w, h, o, id, 0, sy, pm).win) continue;
+      var d0 = 0, v = mask ^ init;
+      while (v) { d0 += v & 1; v >>= 1; }
+      if (d0 < best) best = d0;
+    }
+    if (best === 99) return null;
+
+    return {
+      w: w, h: h, cells: cells, id: id, pm: pm, mirrors: mirrors,
+      par: best, sy: sy, ori: ori0, tip: null
+    };
+  }
+
+  var levelCache = {};
+
+  function getLevel(n) {
+    if (levelCache[n]) return levelCache[n];
+    var d = null;
+    if (INTRO[n]) {
+      d = parseIntro(INTRO[n].rows);
+      if (d) d.tip = INTRO[n].tip;
+    }
+    if (!d) d = buildLevel(n);
+    if (d) levelCache[n] = d;
+    return d;
+  }
+
+  function loadLevel(n, dataIn, daily) {
+    var data = dataIn || getLevel(n);
+    while (!data && n > 1) { n--; data = getLevel(n); }
+    if (!data) return;
+
+    G.level = n; G.daily = !!daily; G.w = data.w; G.h = data.h;
+    G.cells = data.cells; G.id = data.id; G.pm = data.pm; G.ori = data.ori.slice();
+    G.mirrors = data.mirrors.map(function (m, i) {
+      return { x: m.x, y: m.y, ori: m.ori, fixed: !!m.fixed, ang: (m.ori ? 45 : -45) * Math.PI / 180 };
+    });
+    G.par = data.par; G.moves = 0; G.won = false; G.done = false;
+    G.history = []; G.winT = 0; G.shake = 0; G.flash = 0;
+    G.hintIdx = -1; G.hintT = 0; G.t0 = performance.now(); G.fade = 1;
+    G.sy = data.sy;
+    G.data = data;
+    layout();
+    retrace();
+    syncHUD();
+
+    if (data.tip) {
+      tip(data.tip, 9000);
+      save.seenPrism = 1;
+      save.seenPortal = 1;
+      persist();
+    }
+
+    var hasPrism = false;
+    for (var pi = 0; pi < G.cells.length; pi++) {
+      if (G.cells[pi] === PRISM) { hasPrism = true; break; }
+    }
+    var hasPortal = false;
+    for (var pj = 0; pj < G.cells.length; pj++) {
+      if (G.cells[pj] === PORTAL) { hasPortal = true; break; }
+    }
+    if (hasPortal && !save.seenPortal) {
+      save.seenPortal = 1;
+      persist();
+      tip('传送门：光从一端进入，会从另一端以相同方向射出');
+    }
+    if (hasPrism && !save.seenPrism) {
+      save.seenPrism = 1;
+      persist();
+      tip('分光镜：光直行通过，同时 90° 分出一束 —— 两个核心都要点亮');
+    }
+    overlay.classList.remove('show');
+  }
+
+  function retrace() {
+    G.beam = trace(G.cells, G.w, G.h, G.ori, G.id, 0, G.sy, G.pm);
+  }
+
+  var footEl = document.getElementById('foot');
+  var footDefault = footEl.innerHTML;
+  var footTimer = null;
+
+  function tip(html, ms) {
+    footEl.innerHTML = html;
+    clearTimeout(footTimer);
+    footTimer = setTimeout(function () { footEl.innerHTML = footDefault; }, ms || 5600);
+  }
+
+  function syncHUD() {
+    lvEl.textContent = G.daily ? '每日' : fmt(G.level);
+    mvEl.textContent = G.moves;
+    parEl.textContent = G.par;
+    var total = 0;
+    for (var k in save.stars) if (save.stars[k]) total += save.stars[k];
+    var s = save.stars[G.level] || 0;
+    var str = '';
+    for (var i = 0; i < 3; i++) str += i < s ? '★' : '☆';
+    starsEl.innerHTML = '<b>' + str + '</b> &nbsp;·&nbsp; 总 ' + total;
+  }
+
+  function starsFor(moves, par) {
+    if (moves <= par) return 3;
+    if (moves <= par + 2) return 2;
+    return 1;
+  }
+
+  function toggleMirror(idx) {
+    if (G.done) return;
+    var m = G.mirrors[idx];
+    if (!m) return;
+    if (m.fixed) { Sound.fail(); return; }
+    m.ori = m.ori ? 0 : 1;
+    G.ori[idx] = m.ori;
+    G.history.push(idx);
+    G.moves++;
+    Sound.click();
+    retrace();
+    syncHUD();
+    if (G.beam.win) onWin();
+  }
+
+  function onWin() {
+    if (G.won) return;
+    G.won = true; G.done = true; G.winT = 0.9; G.flash = 1;
+    Sound.win();
+  }
+
+  function hint() {
+    if (G.done || !G.mirrors.length) return;
+    var free = [], cur = 0;
+    for (var i = 0; i < G.mirrors.length; i++) if (!G.mirrors[i].fixed) free.push(i);
+    var K = free.length;
+    for (var z = 0; z < K; z++) if (G.ori[free[z]]) cur |= (1 << z);
+    var bestD = 99, bestMask = 0;
+    for (var mask = 0; mask < (1 << K); mask++) {
+      var test = G.ori.slice();
+      for (var b = 0; b < K; b++) test[free[b]] = (mask >> b) & 1;
+      if (!trace(G.cells, G.w, G.h, test, G.id, 0, G.sy, G.pm).win) continue;
+      var d = 0, v = mask ^ cur;
+      while (v) { d += v & 1; v >>= 1; }
+      if (d < bestD) { bestD = d; bestMask = mask; }
+    }
+    if (bestD === 0 || bestD === 99) return;
+    for (var j = 0; j < K; j++) {
+      if (((bestMask >> j) & 1) !== G.ori[free[j]]) {
+        G.hintIdx = free[j]; G.hintT = 3.4;
+        Sound.click();
+        return;
+      }
+    }
+  }
+
+  function undo() {
+    if (G.done || !G.history.length) return;
+    var idx = G.history.pop();
+    G.mirrors[idx].ori = G.mirrors[idx].ori ? 0 : 1;
+    G.ori[idx] = G.mirrors[idx].ori;
+    G.moves = Math.max(0, G.moves - 1);
+    Sound.click();
+    retrace();
+    syncHUD();
+  }
+
+  function restart() {
+    if (!G.w && G.level) return;
+    loadLevel(G.level, G.data, G.daily);
+    Sound.click();
+  }
+
+  function copyText(txt, done) {
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        done(ok ? '已复制到剪贴板' : txt);
+      } catch (e) {
+        done(txt);
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { done('已复制到剪贴板'); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  function showWinPanel() {
+    var st = starsFor(G.moves, G.par);
+    if (G.daily) {
+      save.daily = { d: dailyKey(), moves: G.moves, stars: st };
+    } else {
+      var prev = save.stars[G.level] || 0;
+      if (st > prev) { save.stars[G.level] = st; }
+      save.level = Math.max(save.level, G.level + 1);
+    }
+    persist();
+    syncHUD();
+
+    var secs = Math.max(0, (performance.now() - G.t0) / 1000);
+    var nextLabel = G.daily ? '返 回 选 关' : '下 一 关';
+    var titleTxt = G.daily ? 'D A I L Y &nbsp; C L E A R' : 'L I G H T &nbsp; C O N N E C T E D';
+    var shareHtml = G.daily
+      ? '<div class="link" id="btnShare">复制成绩</div><div class="hintline" id="shareTip"></div>'
+      : '';
+    var s = '';
+    for (var i = 0; i < 3; i++) s += i < st ? '★' : '☆';
+    panel.innerHTML =
+      '<div class="sub">' + titleTxt + '</div>' +
+      '<div class="bigstars">' + s + '</div>' +
+      '<div class="row">' +
+      '<div><b>' + G.moves + '</b>步数</div>' +
+      '<div><b>' + G.par + '</b>最优</div>' +
+      '<div><b>' + secs.toFixed(1) + 's</b>用时</div>' +
+      '</div>' +
+      '<button class="btn" id="btnNext">' + nextLabel + '</button>' +
+      '<div class="link" id="btnReplay">重玩本关</div>' +
+      shareHtml +
+      '<div class="hintline">回车 / 空格 继续</div>';
+    overlay.classList.add('show');
+    document.getElementById('btnNext').onclick = G.daily ? function () { overlay.classList.remove('show'); showMap(); } : nextLevel;
+    if (G.daily) {
+      document.getElementById('btnShare').onclick = function () {
+        var st2 = '';
+        for (var si = 0; si < 3; si++) st2 += si < st ? '★' : '☆';
+        var k = dailyKey();
+        var txt = 'LUMEN 每日 ' + k.slice(0, 4) + '.' + k.slice(4, 6) + '.' + k.slice(6) +
+          ' · ' + G.moves + ' 步 ' + st2 + ' · 最优 ' + G.par + ' 步，你来试试';
+        copyText(txt, function (msg) {
+          document.getElementById('shareTip').textContent = msg;
+        });
+      };
+    }
+    document.getElementById('btnReplay').onclick = function () { overlay.classList.remove('show'); loadLevel(G.level, G.data, G.daily); };
+  }
+
+  function nextLevel() {
+    overlay.classList.remove('show');
+    loadLevel(G.level + 1);
+  }
+
+  var resetArmed = false;
+
+  function resetProgress() {
+    save = { level: 1, stars: {} };
+    levelCache = {};
+    persist();
+    G.daily = false;
+    resetArmed = false;
+    overlay.classList.remove('show');
+    loadLevel(1);
+    tip('进度已清空，从第 1 关重新开始');
+  }
+
+  function startDaily() {
+    var d = buildDaily();
+    if (!d.data) { tip('今日关卡生成失败，稍后再试'); return; }
+    overlay.classList.remove('show');
+    loadLevel(d.lvl, d.data, true);
+    tip('每日挑战 · ' + d.key.slice(0, 4) + '.' + d.key.slice(4, 6) + '.' + d.key.slice(6) + ' · 今天所有人同一道题');
+  }
+
+  function showMap() {
+    var dk = dailyKey();
+    var unlocked = save.level || 1;
+    var maxLv = Math.max(24, unlocked + 3);
+    var cells = '';
+    for (var i = 1; i <= maxLv; i++) {
+      var open = i <= unlocked;
+      var st = save.stars[i] || 0;
+      var s2 = '';
+      for (var k = 0; k < 3; k++) s2 += k < st ? '★' : '☆';
+      cells += '<button class="mapbtn' + (open ? '' : ' lock') + (i === G.level ? ' now' : '') + '" data-lv="' + i + '">' +
+        i + '<i>' + (open ? s2 : '') + '</i></button>';
+    }
+    var done = 0;
+    for (var key in save.stars) if (save.stars[key]) done++;
+
+    panel.innerHTML =
+      '<button class="daily" id="btnDaily">每日一关 · ' + dk.slice(4, 6) + ' 月 ' + dk.slice(6) + ' 日<i>' + (save.daily && save.daily.d === dk ? '已挑战 ' + save.daily.moves + ' 步' : '未挑战') + '</i></button>' +
+      '<div class="sub">S E L E C T &nbsp; L E V E L</div>' +
+      '<div class="mapgrid">' + cells + '</div>' +
+      '<div class="hintline">已通关 ' + done + ' 关 &nbsp;·&nbsp; Esc 关闭</div>' +
+      '<div class="link danger" id="btnReset">重置进度</div>';
+    overlay.classList.add('show');
+    document.getElementById('btnDaily').onclick = startDaily;
+
+    resetArmed = false;
+    var rbtn = document.getElementById('btnReset');
+    rbtn.onclick = function () {
+      if (!resetArmed) {
+        resetArmed = true;
+        rbtn.textContent = '确定清空 3 秒内再点一次';
+        rbtn.className = 'link danger armed';
+        setTimeout(function () {
+          if (!resetArmed) return;
+          resetArmed = false;
+          rbtn.textContent = '重置进度';
+          rbtn.className = 'link danger';
+        }, 3200);
+        return;
+      }
+      resetProgress();
+    };
+
+    var btns = panel.querySelectorAll('.mapbtn');
+    for (var b = 0; b < btns.length; b++) {
+      var lv = Number(btns[b].getAttribute('data-lv'));
+      if (lv > unlocked) continue;
+      btns[b].onclick = (function (n) {
+        return function () { overlay.classList.remove('show'); loadLevel(n); };
+      })(lv);
+    }
+  }
+
+  function showIntro() {
+    panel.innerHTML =
+      '<h1>光路</h1>' +
+      '<div class="sub">L U M E N</div>' +
+      '<p>把光从左侧光源送到右侧核心。<br>' +
+      '点击镜面旋转 45°，让光束拐弯。<br>' +
+      '墙会吞掉光 —— 每一步都算数。</p>' +
+      '<button class="btn" id="btnStart">开 始</button>' +
+      '<div class="link" id="btnDailyIntro">每日挑战</div>' +
+      '<div class="hintline">Z 撤销 &nbsp;·&nbsp; R 重开本关 &nbsp;·&nbsp; 目标：用最少的步数</div>';
+    overlay.classList.add('show');
+    document.getElementById('btnDailyIntro').onclick = startDaily;
+    document.getElementById('btnStart').onclick = function () {
+      overlay.classList.remove('show');
+      Sound.start();
+      loadLevel(save.level || 1);
+    };
+  }
+
+  /* ============================ 输入 ============================ */
+
+  function cellAt(px, py) {
+    var gx = Math.floor((px - G.ox) / G.cs);
+    var gy = Math.floor((py - G.oy) / G.cs);
+    if (gx < 0 || gy < 0 || gx >= G.w || gy >= G.h) return null;
+    return { x: gx, y: gy };
+  }
+
+  btnmap.addEventListener('click', function () { showMap(); });
+
+  cv.addEventListener('pointerdown', function (e) {
+    if (G.done || overlay.classList.contains('show')) return;
+    var c = cellAt(e.clientX, e.clientY);
+    if (!c) return;
+    var idx = G.id[c.y * G.w + c.x];
+    if (idx >= 0) toggleMirror(idx);
+  });
+
+  cv.addEventListener('pointermove', function (e) {
+    var c = cellAt(e.clientX, e.clientY);
+    G.hover = c ? G.id[c.y * G.w + c.x] : -1;
+  });
+
+  cv.addEventListener('pointerleave', function () { G.hover = -1; });
+
+  window.addEventListener('keydown', function (e) {
+    var k = e.key.toLowerCase();
+    if (k === 'escape') { overlay.classList.remove('show'); return; }
+    if (k === 'z') { undo(); return; }
+    if (k === 'h') { hint(); return; }
+    if (k === 'r') { restart(); return; }
+    if (k === ' ' || k === 'enter') {
+      e.preventDefault();
+      if (overlay.classList.contains('show')) {
+        var b = document.getElementById('btnNext') || document.getElementById('btnStart');
+        if (b) b.click();
+      }
+    }
+  });
+
+  window.addEventListener('resize', resize);
+
+  /* ============================ 绘制 ============================ */
+
+  function drawBoard() {
+    var cs = G.cs;
+    var pad = 10;
+    var bx = G.ox - pad, by = G.oy - pad, bw = cs * G.w + pad * 2, bh = cs * G.h + pad * 2;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(60,180,210,0.18)';
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = 'rgba(9,16,26,0.72)';
+    ctx.beginPath();
+    roundRect(bx, by, bw, bh, 6);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(90,190,220,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    roundRect(bx, by, bw, bh, 6);
+    ctx.stroke();
+
+    for (var y = 0; y < G.h; y++) {
+      for (var x = 0; x < G.w; x++) {
+        var p = cellCenter(x, y);
+        var c = G.cells[y * G.w + x];
+        ctx.strokeStyle = 'rgba(70,130,160,0.13)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        roundRect(p.x - cs / 2 + 2.5, p.y - cs / 2 + 2.5, cs - 5, cs - 5, 3);
+        ctx.stroke();
+        if (c === WALL) {
+          ctx.fillStyle = 'rgba(20,34,46,0.95)';
+          ctx.beginPath();
+          roundRect(p.x - cs / 2 + 2.5, p.y - cs / 2 + 2.5, cs - 5, cs - 5, 3);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(90,140,160,0.22)';
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function segPath(seg) {
+    var cs = G.cs;
+    var pts = [];
+    for (var i = 0; i < seg.length; i++) {
+      if (seg[i].out) continue;
+      pts.push(cellCenter(seg[i].x, seg[i].y));
+    }
+    var outP = seg[seg.length - 1];
+    if (outP && outP.out && pts.length) {
+      var last = pts[pts.length - 1];
+      var cx = G.ox + outP.x * cs + cs / 2;
+      var cy = G.oy + outP.y * cs + cs / 2;
+      var vx = cx - last.x, vy = cy - last.y;
+      var kx = 1, ky = 1;
+      if (vx !== 0) {
+        if (cx < G.ox) kx = (G.ox - last.x) / vx;
+        else if (cx > G.ox + cs * G.w) kx = (G.ox + cs * G.w - last.x) / vx;
+      }
+      if (vy !== 0) {
+        if (cy < G.oy) ky = (G.oy - last.y) / vy;
+        else if (cy > G.oy + cs * G.h) ky = (G.oy + cs * G.h - last.y) / vy;
+      }
+      var kk = Math.max(0, Math.min(kx, ky));
+      pts.push({ x: last.x + vx * kk, y: last.y + vy * kk });
+    }
+    return pts;
+  }
+
+  function drawBeam() {
+    var b = G.beam;
+    if (!b || !b.segs || !b.segs.length) return;
+    var lines = [];
+    for (var i = 0; i < b.segs.length; i++) {
+      var p = segPath(b.segs[i]);
+      if (p.length > 1) lines.push(p);
+    }
+    if (!lines.length) return;
+
+    var live = b.win;
+    var col = live ? '123,240,208' : '90,200,235';
+
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.globalCompositeOperation = 'lighter';
+
+    ctx.strokeStyle = 'rgba(' + col + ',' + (live ? 0.20 : 0.12) + ')';
+    ctx.lineWidth = 13;
+    ctx.shadowColor = 'rgba(' + col + ',0.9)';
+    ctx.shadowBlur = 24;
+    for (var a1 = 0; a1 < lines.length; a1++) { polyline(lines[a1]); ctx.stroke(); }
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(' + col + ',0.72)';
+    ctx.lineWidth = 2.4;
+    for (var a2 = 0; a2 < lines.length; a2++) { polyline(lines[a2]); ctx.stroke(); }
+
+    ctx.strokeStyle = live ? 'rgba(235,255,250,0.95)' : 'rgba(200,240,255,0.8)';
+    ctx.lineWidth = 1.1;
+    for (var a3 = 0; a3 < lines.length; a3++) { polyline(lines[a3]); ctx.stroke(); }
+
+    ctx.setLineDash([10, 16]);
+    ctx.lineDashOffset = -G.t * 95;
+    ctx.strokeStyle = live ? 'rgba(210,255,245,0.7)' : 'rgba(140,215,255,0.34)';
+    ctx.lineWidth = 1.6;
+    for (var a4 = 0; a4 < lines.length; a4++) { polyline(lines[a4]); ctx.stroke(); }
+    ctx.setLineDash([]);
+
+    for (var a5 = 0; a5 < lines.length; a5++) {
+      var end = lines[a5][lines[a5].length - 1];
+      ctx.beginPath();
+      ctx.arc(end.x, end.y, 3, 0, TAU);
+      ctx.fillStyle = live ? '#eafffb' : 'rgba(200,240,255,0.9)';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function polyline(pts) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  }
+
+  function drawMirrors() {
+    var cs = G.cs;
+    for (var i = 0; i < G.mirrors.length; i++) {
+      var m = G.mirrors[i];
+      var p = cellCenter(m.x, m.y);
+      var target = (m.ori ? 45 : -45) * Math.PI / 180;
+      m.ang = lerp(m.ang, target, 0.28);
+
+      var hot = G.hover === i && !m.fixed;
+      var R = cs * 0.33;
+      var isPrism = G.cells[m.y * G.w + m.x] === PRISM;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(m.ang);
+
+      /* 镜面 */
+      ctx.shadowColor = hot ? 'rgba(160,255,240,0.95)' : 'rgba(110,220,240,0.55)';
+      ctx.shadowBlur = hot ? 22 : 11;
+      ctx.strokeStyle = m.fixed ? 'rgba(120,160,180,0.75)' : (hot ? '#eafffb' : '#a8e8ff');
+      ctx.lineWidth = 3.4;
+      ctx.beginPath();
+      ctx.moveTo(-R, 0);
+      ctx.lineTo(R, 0);
+      ctx.stroke();
+
+      /* 背面反光 */
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(120,200,230,0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-R, 4.5);
+      ctx.lineTo(R, 4.5);
+      ctx.stroke();
+
+      if (m.fixed) {
+        ctx.beginPath();
+        ctx.arc(0, 0, 4.2, 0, TAU);
+        ctx.strokeStyle = 'rgba(140,190,210,0.9)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+      if (isPrism) {
+        ctx.beginPath();
+        ctx.moveTo(0, -cs * 0.17);
+        ctx.lineTo(cs * 0.16, cs * 0.12);
+        ctx.lineTo(-cs * 0.16, cs * 0.12);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255,214,120,0.20)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,214,120,0.95)';
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      /* 中心轴 */
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.2, 0, TAU);
+      ctx.fillStyle = hot ? '#ffffff' : 'rgba(200,240,255,0.7)';
+      ctx.fill();
+
+      if (G.hintIdx === i && G.hintT > 0) {
+        var hp = 0.5 + 0.5 * Math.sin(G.t * 9);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, cs * 0.36 + hp * 4, 0, TAU);
+        ctx.strokeStyle = 'rgba(255,214,120,' + (0.45 + hp * 0.5).toFixed(2) + ')';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawTargets() {
+    var litSet = (G.beam && G.beam.litSet) || {};
+    var t = G.t;
+    for (var i = 0; i < G.cells.length; i++) {
+      if (G.cells[i] !== TGT) continue;
+      var tx = i % G.w, ty = (i - tx) / G.w;
+      var p = cellCenter(tx, ty);
+      var live = !!litSet[i];
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      var pulse = 1 + Math.sin(t * 3) * 0.06;
+      var R = G.cs * 0.28 * pulse;
+
+      ctx.shadowColor = live ? 'rgba(123,240,208,1)' : 'rgba(90,170,200,0.7)';
+      ctx.shadowBlur = live ? 34 : 12;
+      ctx.strokeStyle = live ? '#eafffb' : 'rgba(150,210,235,0.8)';
+      ctx.lineWidth = 2;
+      for (var k = 0; k < 2; k++) {
+        ctx.beginPath();
+        ctx.arc(0, 0, R + k * 7 * pulse, 0, TAU);
+        ctx.globalAlpha = 1 - k * 0.55;
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.42, 0, TAU);
+      ctx.fillStyle = live ? '#ffffff' : 'rgba(180,230,250,0.55)';
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawPortals() {
+    for (var i = 0; i < G.cells.length; i++) {
+      if (G.cells[i] !== PORTAL) continue;
+      var px = i % G.w, py = (i - px) / G.w;
+      var p = cellCenter(px, py);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(G.t * 0.8);
+      ctx.strokeStyle = 'rgba(178,150,255,0.92)';
+      ctx.shadowColor = 'rgba(150,120,255,0.95)';
+      ctx.shadowBlur = 15;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, G.cs * 0.26, 0.25, Math.PI * 1.15);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, G.cs * 0.26, Math.PI * 1.35, Math.PI * 2.15);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+  }
+
+  function drawSource() {
+    var p = cellCenter(0, G.sy);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(-Math.PI / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, -G.cs * 0.16);
+    ctx.lineTo(G.cs * 0.15, G.cs * 0.13);
+    ctx.lineTo(-G.cs * 0.15, G.cs * 0.13);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(190,240,255,0.85)';
+    ctx.shadowColor = 'rgba(120,220,255,0.9)';
+    ctx.shadowBlur = 16;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    /* 浮尘 */
+    for (var i = 0; i < dust.length; i++) {
+      var d = dust[i];
+      d.y -= d.v * 0.016;
+      if (d.y < -4) { d.y = H + 4; d.x = Math.random() * W; }
+      ctx.fillStyle = 'rgba(150,220,240,' + (0.05 + d.a * 0.14).toFixed(3) + ')';
+      ctx.fillRect(d.x, d.y, d.s, d.s);
+    }
+
+    if (!G.cells) { finishFrame(); return; }
+
+    if (G.shake > 0.001) ctx.translate((Math.random() - 0.5) * 4 * G.shake, (Math.random() - 0.5) * 4 * G.shake);
+
+    drawBoard();
+    drawPortals();
+    drawBeam();
+    drawTargets();
+    drawSource();
+    drawMirrors();
+
+    finishFrame();
+  }
+
+  function finishFrame() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, W, H);
+    if (G.fade > 0) {
+      ctx.fillStyle = 'rgba(5,7,13,' + Math.min(1, G.fade).toFixed(3) + ')';
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (G.flash > 0) {
+      ctx.fillStyle = 'rgba(123,240,208,' + (G.flash * 0.22).toFixed(3) + ')';
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  /* ============================ 主循环 ============================ */
+
+  var lastT = 0;
+  function loop(now) {
+    if (!lastT) lastT = now;
+    var dt = (now - lastT) / 1000;
+    lastT = now;
+    if (dt > 0.05) dt = 0.05;
+
+    G.t += dt;
+    if (G.hintT > 0) G.hintT -= dt;
+    if (G.fade > 0) G.fade -= dt * 2.4;
+    G.flash = Math.max(0, G.flash - dt * 2.2);
+    G.shake = Math.max(0, G.shake - dt * 4);
+
+    if (G.winT > 0) {
+      G.winT -= dt;
+      if (G.winT <= 0) { G.winT = 0; showWinPanel(); }
+    }
+
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  /* ============================ 启动 ============================ */
+
+  if (window.__LM_TEST) {
+    window.__LM = {
+      buildLevel: buildLevel,
+      trace: trace,
+      G: G,
+      toggleMirror: toggleMirror,
+      undo: undo,
+      retrace: retrace,
+      showMap: showMap,
+      hint: hint,
+      buildDaily: buildDaily,
+      dailyKey: dailyKey,
+      loadLevel: loadLevel
+    };
+  }
+
+  resize();
+  showIntro();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
