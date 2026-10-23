@@ -1,98 +1,89 @@
-# 三个小游戏 · Three Little Games
+# Three Little Games · 三个小游戏
 
-全部由 **DeepSeek Harness 里的 AI 从零写完**：单文件 HTML，无框架、无第三方库、无外部素材。
-两个是 Canvas 实时绘制，一个是纯 DOM 排版；音乐和音效都是 WebAudio 实时合成——仓库里除了 HTML 没有任何资源文件。
+Three tiny browser games, each a **single self-contained HTML file** — no build step, no dependencies, no external assets. All art is drawn at runtime on `<canvas>` (or in the DOM), all music and sound effects are synthesised live with the Web Audio API. There is not a single image, font, or audio file in this repository.
 
-| 游戏 | 类型 | 一局时长 |
+Each game has a **中文 / EN** toggle in the top-right corner. It picks your browser language on first load and remembers your choice.
+
+| Game | Genre | Session length |
 |---|---|---|
-| [霓虹闪避 NEON DODGE](neon-dodge/index.html) | 实时 · 躲避 + 擦身连击 | 40 秒 ~ 2 分钟 |
-| [光路 LUMEN](lumen/index.html) | 回合制 · 光路解谜 | 每关 30 秒 ~ 3 分钟 |
-| [骰子地牢 DICE DELVE](dice-delve/index.html) | 回合制 · 骰子分配 Roguelike | 4 ~ 6 分钟 |
+| [NEON DODGE](neon-dodge/index.html) | Real-time arcade · dodge + graze combo | 40 s – 2 min |
+| [LUMEN](lumen/index.html) | Turn-based puzzle · route the light beam | 30 s – 3 min per level |
+| [DICE DELVE](dice-delve/index.html) | Turn-based roguelike · dice allocation | 4 – 6 min |
 
-**运行方式**：双击 `index.html`，或丢进任意静态服务器。不需要构建、不需要联网。
-
----
-
-## 1. 霓虹闪避 · NEON DODGE
-
-`neon-dodge/index.html` · 82 KB
-
-俯视视角的霓虹街机。方块从上方砸下来，你要贴着它们擦过去——**擦身**会累积连击倍率，连击 3.4 秒不续就会断。
-
-- **移动**：鼠标 / 手指拖动（飞船固定在下方一条窄带内，横向 1:1 跟手）
-- **冲刺**：空格 / 手机 DASH 键。冲刺期间无敌，撞碎方块得分
-- **擦身**：从方块边缘擦过，连击 +1，倍率最高 x3
-- **掉落**：绿球加分、金球大分、粉球补护盾、蓝球慢动作
-
-内容：3 种飞船 × 3 档难度；每 3 波一个**精英**（守卫 / 巡猎者）；精英半血会**暴走**；6 个成就、本机排行榜、C~S 评级。
-
-快捷键：`P` 暂停 · `M` 静音 · `S` 开关震动 · `F` 帧率 · `L` 性能模式 · `Enter` 全屏
+**Run it:** double-click any `index.html`, or serve the folder from any static server. Nothing to install.
 
 ---
 
-## 2. 光路 · LUMEN
+## 1. NEON DODGE
 
-`lumen/index.html` · 51 KB
+Top-down neon arcade. Blocks rain down; you survive by *grazing* them — shaving past a block's edge builds a combo multiplier that breaks 3.4 s after your last graze.
 
-回合制解谜。转动镜面，把光从光源送到核心——**没有时间压力，也没有失败**，只有步数。
-点击镜面旋转 45°，光束实时跟着重画，点亮**全部**核心即通关。
+- **Move** — drag with mouse or finger (1:1 horizontal, the ship lives in a narrow band at the bottom)
+- **Dash** — `Space` or the on-screen DASH button. Invulnerable mid-dash; dash into a block to smash it
+- **Pickups** — green/score, gold/big score, pink/shield, blue/slow-motion
 
-元素（按关卡解锁）：
+3 ships × 3 difficulties, an elite every 3 waves (Guard / Hunter, each with two phases), 6 achievements, a local leaderboard and C/B/A/S rankings.
 
-| 元素 | 作用 | 起始 |
+Keys: `P` pause · `M` mute · `S` shake · `F` fps · `L` perf mode · `Enter` fullscreen
+
+---
+
+## 2. LUMEN
+
+A turn-based puzzle. Rotate mirrors to route the beam from the source into every core. No timers, no failure states — only move count.
+
+Click a mirror to rotate it 45°; the beam redraws immediately. Clear the level by lighting **all** cores.
+
+| Element | Effect | From level |
 |---|---|---|
-| 镜面 | 90° 反射 | 1 |
-| 分光镜 | 直行 + 90° 分出一束 | 6 |
-| 传送门 | 光从一端进、另一端同向出 | 9 |
-| 上锁镜面 | 不能转，只能绕 | 12 |
-| 双核心 | 必须同时点亮 | 6 |
+| Mirror | reflects 90° | 1 |
+| Prism | passes straight through **and** splits off a beam at 90° | 6 |
+| Portal | enters one end, leaves the other in the same direction | 9 |
+| Locked mirror | cannot rotate — route around it | 12 |
+| Second core | both cores must be lit | 6 |
 
-- **3 关手写引导**（第 5 / 8 / 11 关），每关 1 步，专教一个新元素
-- **无限程序生成**，棋盘封顶 12×8，难度阶梯（前段 PAR 2，后段 4~6）
-- **每日一关**：日期做随机种子，当天全世界同一道题，可一键复制成绩
-- 每关的 **PAR 是穷举所有朝向得出的精确最小值**；`H` 键提示会实时算出“离你当前状态最近的那个解”
+- **3 hand-authored tutorial levels** (5 / 8 / 11), one move each, each teaching a new element
+- **Endless procedural levels** — boards capped at 12×8, difficulty ladder from PAR 2 up to 4–6
+- **Daily challenge** — seeded by the date, so everyone gets the same puzzle; one-tap copy of your result
+- Every level's **PAR is the exact minimum**, found by exhaustively trying all 2ⁿ mirror orientations. The `H` hint solves from your current position in real time.
 
-`Z` 撤销 · `R` 重开本关 · `H` 提示 · `Esc` 关闭面板
+`Z` undo · `R` restart · `H` hint · `Esc` close panel
 
 ---
 
-## 3. 骰子地牢 · DICE DELVE
+## 3. DICE DELVE
 
-`dice-delve/index.html` · 27 KB
+A turn-based dice-allocation roguelike. Each turn you roll 5 dice and assign them to three actions:
 
-回合制骰子分配 Roguelike。每回合掷 5 颗骰子，把它们分配给三种行动：
-
-| 行动 | 效果 |
+| Action | Effect |
 |---|---|
-| ⚔ 攻击 | 骰子点数之和 = 伤害 |
-| 🛡 护盾 | 点数之和 = 格挡，抵挡本回合敌人的攻击 |
-| ✦ 蓄能 | 点数之和进入蓄能条，满 15 自动爆发：额外 22 伤害 + 12 格挡 |
+| ⚔ Attack | sum of the dice = damage |
+| 🛡 Block | sum of the dice = block against this turn's incoming hit |
+| ✦ Charge | sum feeds the charge bar; at 15 it auto-bursts for 22 damage + 12 block |
 
-**敌人的下一步是公开的**，你要在“挡够”和“打痛”之间做取舍。
-4 层地牢、7 场战斗，每场胜利后三选一强化：加最大生命、加一颗骰子、加攻击/护盾/蓄能效率、或立刻回血。
+**Enemy intents are public** — you always see what's coming, so the whole decision is how much to block versus how hard to hit. Five floors, nine fights, and a three-way reward after each win (max HP, an extra die, attack/defence/charge efficiency, or a build-defining relic like *Thorn Mail*, *Head Start* or *Combo*).
 
-- 操作：点骰子 → 点区域投放；点区域里的骰子可以拿回来
-- `空格 / 回车` 结束回合
+- Click a die, then click a zone to assign it; click an assigned die to take it back
+- **Reroll** once per turn, and only on dice you haven't assigned yet
+- `Space` / `Enter` end the turn
+- Progress auto-saves after every turn; the title screen offers **Continue**
 
-平衡不是拍脑袋定的：写了一个贪心策略的机器人**模拟 300 局**，把胜率调到 **55% 左右**（对局平均 23 回合）。真人一般会比机器人差，落点大约三到四成。
+Balance isn't guesswork: a greedy-policy bot plays 300 simulated runs and the numbers are tuned to a win rate around 55–60 % (a human lands lower). Average run: ~23 turns.
 
 ---
 
-## 技术说明
+## How these were built and checked
 
-- **单文件**：每个游戏就是一个 HTML，样式、逻辑、美术、音频全在里面
-- **零依赖**：没有打包工具、没有 CDN、没有字体文件
-- **音频**：WebAudio 手写合成器（底鼓 / 踩镲 / 贝斯 / 琶音 / 卷积混响），没有任何音频文件
-- **渲染**：霓虹闪避与光路是 Canvas 2D；骰子地牢是纯 DOM + CSS
-- **存档**：`localStorage`
-- **确定性**：解谜关卡与每日挑战用可播种随机（mulberry32），同一颗种子永远同一道题
+All three are plain JavaScript in one file each — no framework, no bundler, no minification.
 
-## 开发过程中的验证
+Core logic was verified headlessly in Node with minimal DOM/canvas stubs:
 
-三个游戏都不是“写完就交”——核心逻辑都用 Node 跑真实脚本验证过：
+- **NEON DODGE** — a ~5,000-frame smoke test covering start, dash, pause, death, results and restart
+- **LUMEN** — a 100-level audit: independently re-enumerates PAR, checks that every mirror's drawn orientation matches the orientation used by the beam, replays the optimal solution to confirm it wins, and verifies that locked mirrors actually sit on the light path
+- **DICE DELVE** — 300 simulated runs for balance, plus a save/restore test that reloads the page-equivalent state and a strict-DOM check that every element the code touches really exists
 
-- **霓虹闪避**：约 5000 帧的冒烟测试，覆盖开局、冲刺、暂停、死亡、结算、重开
-- **光路**：100 关全量审计——独立穷举复核 PAR、检查镜面朝向与光束计算是否同步、按最优解实际点一遍确认能通关；还检查了“上锁镜面是否真的在光路上”
-- **骰子地牢**：300 局自动模拟，用来定双方数值；另有 UI 路径测试（选骰 → 投放 → 结算）
+That last check earned its keep: an earlier build referenced a removed element id, and the render function threw silently before it ever reached the dice — the HUD drew, the dice didn't. The permissive stub hid it; the strict one caught it immediately.
 
-这套做法抓到过几个真 bug，包括一个“锁住的镜子根本没被光碰到”和“镜面显示朝向与实际朝向不一致”的问题。
+## Licence
+
+Personal project, no licence specified. Play it, fork it, learn from it.
