@@ -2194,15 +2194,18 @@
 
   (function () {
     var LANG = 'zh';
+    var sysEn = (navigator.language || 'zh').toLowerCase().indexOf('zh') !== 0;
     try {
       var sv = localStorage.getItem('gameLang');
       if (sv) LANG = sv;
-      else if ((navigator.language || 'zh').toLowerCase().indexOf('zh') !== 0) LANG = 'en';
-    } catch (e) { }
+      else if (sysEn) LANG = 'en';
+    } catch (e) {
+      if (sysEn) LANG = 'en';
+    }
 
-    var EXACT = {"霓虹闪避":"NEON DODGE","开 始":"START","继 续":"RESUME","重 开":"RESTART","再 来":"RETRY","再 来 一 次":"PLAY AGAIN","换 飞 船":"CHANGE SHIP","选 船":"SHIP","倒 下 了":"YOU DIED","暂停":"PAUSED","安静":"QUIET","静音":"MUTE","震动":"SHAKE","成就":"ACHIEVEMENTS","性能模式 开":"Perf mode ON","性能模式 关":"Perf mode OFF","画面震动 开":"Screen shake ON","画面震动 关":"Screen shake OFF","音乐 开":"Music ON","音乐 关":"Music OFF","开音乐":"Music on","开震动":"Shake on","关震动":"Shake off","三格护盾<br>标准机动":"3 shields<br>balanced handling","两格护盾<br>高速闪避":"2 shields<br>fast dodging","四格护盾<br>冲撞更久":"4 shields<br>longer dash","击杀一只精英守卫":"Kill an elite guard","单局连击 25":"Combo 25 in one run","抵达第 6 波":"Reach wave 6","单局破万":"Score 10k in one run","初次起飞":"First flight","二十五连":"Combo 25","完美主义":"Perfectionist","深潜者":"Deep diver","五位数":"Five digits","守 卫 暴 走":"GUARD ENRAGED","贴着方块擦过去":"Graze past the blocks","完美波次 +":"PERFECT WAVE +","已达 S 级":"S rank reached","平衡":"BALANCE","疾影":"BLINK","壁垒":"BULWARK","猎手":"HUNTER","休闲":"RELAXED","标准":"NORMAL","狂潮":"FRENZY","连击":"COMBO","最高":"BEST","最长":"LONGEST","场次":"RUNS","擦身":"GRAZE","撞碎":"SMASH","分到":"SCORE","中文":"中文","切换英文":"切换到英文"};
+    var EXACT = {"霓虹闪避":"NEON DODGE","开 始":"START","继 续":"RESUME","重 开":"RESTART","再 来":"RETRY","再 来 一 次":"PLAY AGAIN","换 飞 船":"CHANGE SHIP","选 船":"SHIP","倒 下 了":"YOU DIED","暂停":"PAUSED","安静":"QUIET","静音":"MUTE","震动":"SHAKE","成就":"ACHIEVEMENTS","性能模式 开":"Perf mode ON","性能模式 关":"Perf mode OFF","画面震动 开":"Screen shake ON","画面震动 关":"Screen shake OFF","音乐 开":"Music ON","音乐 关":"Music OFF","开音乐":"Music on","开震动":"Shake on","关震动":"Shake off","三格护盾<br>标准机动":"3 shields<br>balanced handling","两格护盾<br>高速闪避":"2 shields<br>fast dodging","四格护盾<br>冲撞更久":"4 shields<br>longer dash","击杀一只精英守卫":"Kill an elite guard","单局连击 25":"Combo 25 in one run","抵达第 6 波":"Reach wave 6","单局破万":"Score 10k in one run","初次起飞":"First flight","二十五连":"Combo 25","完美主义":"Perfectionist","深潜者":"Deep diver","五位数":"Five digits","守 卫 暴 走":"GUARD ENRAGED","贴着方块擦过去":"Graze past the blocks","完美波次 +":"PERFECT WAVE +","已达 S 级":"S rank reached","平衡":"BALANCE","疾影":"BLINK","壁垒":"BULWARK","猎手":"HUNTER","休闲":"RELAXED","标准":"NORMAL","狂潮":"FRENZY","连击":"COMBO","最高":"BEST","最长":"LONGEST","场次":"RUNS","擦身":"GRAZE","撞碎":"SMASH","分到":"SCORE","三格护盾":"3 shields","标准机动":"balanced handling","两格护盾":"2 shields","高速闪避":"fast dodging","四格护盾":"4 shields","冲撞更久":"longer dash","霓虹闪避 · NEON DODGE":"NEON DODGE","空格":"Space","性能模式(开)":"perf mode(on)","性能模式(关)":"perf mode(off)","回车 全屏":"Enter fullscreen","帧率":"fps","同效":"also works","性能模式(":"perf mode(","关":"off","开":"on"};
     var RULES = [["^场次 (\\d+)$","RUNS $1"],["^最高 (\\d+)$","BEST $1"],["^历史最高连击 (\\d+)$","Best combo $1"],["^· (\\d+) 秒$","· $1s"],["^第 (\\d+) 波$","Wave $1"]];
-    var FRAGS = [["整波不掉护盾","Clear a wave without losing shields"],["完成第一局","Finish your first run"],["· 精英","· ELITE"],["场次","RUNS"],["再来","RETRY"],["鼠标 / 手指左右拖动即可","drag left / right with mouse or finger"],["冲刺撞碎方块","dash to smash blocks"],["贴着方块擦过去 → 连击加倍，但连击会在 3.4 秒后断掉","graze past blocks to double your combo — the combo breaks after 3.4s"],["擦过方块加分 · 连击 3.4 秒内不断 · 回车可全屏","graze for points · keep the combo alive within 3.4s · Enter for fullscreen"],["每 3 波 · 精英来袭（守卫 / 巡猎者，冲刺撞它才掉血）","every 3 waves an elite appears (guard / hunter — only a dash hurts it)"],["空格 立即重开","Space to restart"],["P 继续","P to resume"],["P 暂停","P to pause"],["立即重开","restart now"],["历史最高连击","best combo"],["画面震动","screen shake"],["性能模式","perf mode"],["音乐","music"],["成就","achievements"],["暂停","paused"],["静音","mute"],["震动","shake"],["连击","combo"],["最高","best"],["秒","s"],["分","pts"]];
+    var FRAGS = [["性能模式(","perf mode("],["性能模式(开)","perf mode(on)"],["性能模式(关)","perf mode(off)"],["帧率","fps"],["回车 全屏","Enter fullscreen"],["全屏","fullscreen"],["回车","Enter"],["同效","also works"],["（"," ("],["）",")"],["关震动","Shake off"],["撞碎","SMASH"],["擦身","GRAZE"],["最长","LONGEST"],["空格","Space"],["整波不掉护盾","Clear a wave without losing shields"],["完成第一局","Finish your first run"],["· 精英","· ELITE"],["场次","RUNS"],["再来","RETRY"],["鼠标 / 手指左右拖动即可","drag left / right with mouse or finger"],["冲刺撞碎方块","dash to smash blocks"],["贴着方块擦过去 → 连击加倍，但连击会在 3.4 秒后断掉","graze past blocks to double your combo — the combo breaks after 3.4s"],["擦过方块加分 · 连击 3.4 秒内不断 · 回车可全屏","graze for points · keep the combo alive within 3.4s · Enter for fullscreen"],["每 3 波 · 精英来袭（守卫 / 巡猎者，冲刺撞它才掉血）","every 3 waves an elite appears (guard / hunter — only a dash hurts it)"],["空格 立即重开","Space to restart"],["P 继续","P to resume"],["P 暂停","P to pause"],["立即重开","restart now"],["历史最高连击","best combo"],["画面震动","screen shake"],["性能模式","perf mode"],["音乐","music"],["成就","achievements"],["暂停","paused"],["静音","mute"],["震动","shake"],["连击","combo"],["最高","best"],["秒","s"],["分","pts"]];
     var RX = [];
     for (var i = 0; i < RULES.length; i++) RX.push([new RegExp(RULES[i][0]), RULES[i][1]]);
     FRAGS.sort(function (a, b) { return b[0].length - a[0].length; });
@@ -2211,7 +2214,10 @@
       if (LANG !== 'en') return null;
       var t = s.trim();
       if (!t) return null;
-      if (EXACT[t] !== undefined) return EXACT[t];
+      if (EXACT[t] !== undefined) {
+        var e = EXACT[t];
+        return e === t ? null : e;
+      }
       for (var i = 0; i < RX.length; i++) {
         if (RX[i][0].test(t)) return t.replace(RX[i][0], RX[i][1]);
       }
@@ -2225,39 +2231,50 @@
       return hit ? out : null;
     }
 
+    var busy = false;
+
     function walk(n) {
       if (!n) return;
       if (n.nodeType === 3) {
         var v = tf(n.nodeValue);
-        if (v !== null) n.nodeValue = v;
+        if (v !== null && v !== n.nodeValue) n.nodeValue = v;
         return;
       }
       if (n.nodeType !== 1) return;
       var tag = n.tagName;
       if (tag === 'SCRIPT' || tag === 'STYLE') return;
-      if (n.title) { var tv = tf(n.title); if (tv !== null) n.title = tv; }
-      if (n.placeholder) { var pv = tf(n.placeholder); if (pv !== null) n.placeholder = pv; }
+      if (n.getAttribute && n.getAttribute('data-i18n-skip')) return;
+      if (n.title) { var tv = tf(n.title); if (tv !== null && tv !== n.title) n.title = tv; }
+      if (n.placeholder) { var pv = tf(n.placeholder); if (pv !== null && pv !== n.placeholder) n.placeholder = pv; }
       var kids = n.childNodes;
       for (var i = 0; i < kids.length; i++) walk(kids[i]);
     }
 
     if (LANG === 'en') {
-      if (document.title) { var dt = tf(document.title); if (dt !== null) document.title = dt; }
+      if (document.title) {
+        var dt = tf(document.title);
+        if (dt !== null && dt !== document.title) document.title = dt;
+      }
       walk(document.body);
       try {
         new MutationObserver(function (ms) {
-          for (var i = 0; i < ms.length; i++) {
-            var a = ms[i].addedNodes;
-            for (var j = 0; j < a.length; j++) walk(a[j]);
-            if (ms[i].type === 'characterData') walk(ms[i].target);
-          }
+          if (busy) return;
+          busy = true;
+          try {
+            for (var i = 0; i < ms.length; i++) {
+              var a = ms[i].addedNodes;
+              for (var j = 0; j < a.length; j++) walk(a[j]);
+              if (ms[i].type === 'characterData') walk(ms[i].target);
+            }
+          } finally { busy = false; }
         }).observe(document.body, { childList: true, subtree: true, characterData: true });
       } catch (e) { }
     }
 
     var btn = document.createElement('button');
+    btn.setAttribute('data-i18n-skip', '1');
     btn.textContent = LANG === 'en' ? '中文' : 'EN';
-    btn.title = LANG === 'en' ? '切换到中文' : 'Switch to English';
+    btn.title = LANG === 'en' ? '切换中文' : 'Switch to English';
     btn.style.cssText = 'position:fixed;right:12px;top:10px;z-index:999;' +
       'padding:5px 9px;border-radius:7px;cursor:pointer;font:700 11px/1 system-ui,sans-serif;' +
       'letter-spacing:.06em;opacity:.72;transition:opacity .2s;' +

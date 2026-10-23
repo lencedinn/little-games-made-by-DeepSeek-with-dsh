@@ -1456,15 +1456,18 @@
 
   (function () {
     var LANG = 'zh';
+    var sysEn = (navigator.language || 'zh').toLowerCase().indexOf('zh') !== 0;
     try {
       var sv = localStorage.getItem('gameLang');
       if (sv) LANG = sv;
-      else if ((navigator.language || 'zh').toLowerCase().indexOf('zh') !== 0) LANG = 'en';
-    } catch (e) { }
+      else if (sysEn) LANG = 'en';
+    } catch (e) {
+      if (sysEn) LANG = 'en';
+    }
 
-    var EXACT = {"光路":"LUMEN","开 始":"START","下 一 关":"NEXT LEVEL","返 回 选 关":"BACK TO LEVELS","重玩本关":"REPLAY","重置进度":"RESET PROGRESS","确定清空 3 秒内再点一次":"Click again within 3s to confirm","每日":"DAILY","每日挑战":"DAILY CHALLENGE","已通关":"Cleared","选 关":"LEVELS","复制成绩":"COPY RESULT","已复制到剪贴板":"Copied to clipboard","步数":"Moves","最优":"PAR","用时":"Time","回车 / 空格 继续":"Enter / Space to continue","进度已清空，从第 1 关重新开始":"Progress reset. Starting again from level 1.","今日关卡生成失败，稍后再试":"Could not build today's puzzle. Try again later.","把光从左侧光源送到右侧核心。":"Route the light from the source to the core.","点击镜面旋转 45°，让光束拐弯。":"Click a mirror to rotate it 45° and bend the beam.","墙会吞掉光 —— 每一步都算数。":"Walls swallow light. Every move counts.","Z 撤销  ·  R 重开本关  ·  目标：用最少的步数":"Z undo  ·  R restart  ·  goal: fewest moves","点击镜面旋转  ·  Z 撤销  ·  R 重开本关  ·  H 提示  ·  ⊞ 选关":"Click to rotate  ·  Z undo  ·  R restart  ·  H hint  ·  ⊞ levels","分光镜：光会直行通过，同时 90° 分出一束 —— 转动它，让两束各打一个核心":"PRISM: light passes straight through and also splits off at 90°. Turn it so both beams hit a core.","分光镜：光直行通过，同时 90° 分出一束 —— 两个核心都要点亮":"PRISM: light passes straight through and splits at 90°. Both cores must be lit.","传送门：光从一端进入，会从另一端以相同方向射出 —— 用它绕过整面墙":"PORTAL: light entering one end leaves the other in the same direction. Use it to get past a wall.","传送门：光从一端进入，会从另一端以相同方向射出":"PORTAL: light entering one end leaves the other in the same direction.","灰圈镜面是锁死的，转不动 —— 光路只能绕着它走":"Mirrors with a grey ring are locked. Route around them.","今日所有人同一道题":"everyone gets the same puzzle today"};
+    var EXACT = {"光路":"LUMEN","开 始":"START","下 一 关":"NEXT LEVEL","返 回 选 关":"BACK TO LEVELS","重玩本关":"REPLAY","重置进度":"RESET PROGRESS","确定清空 3 秒内再点一次":"Click again within 3s to confirm","每日":"DAILY","每日挑战":"DAILY CHALLENGE","已通关":"Cleared","选 关":"LEVELS","复制成绩":"COPY RESULT","已复制到剪贴板":"Copied to clipboard","步数":"Moves","最优":"PAR","用时":"Time","回车 / 空格 继续":"Enter / Space to continue","进度已清空，从第 1 关重新开始":"Progress reset. Starting again from level 1.","今日关卡生成失败，稍后再试":"Could not build today's puzzle. Try again later.","把光从左侧光源送到右侧核心。":"Route the light from the source to the core.","点击镜面旋转 45°，让光束拐弯。":"Click a mirror to rotate it 45° and bend the beam.","墙会吞掉光 —— 每一步都算数。":"Walls swallow light. Every move counts.","Z 撤销  ·  R 重开本关  ·  目标：用最少的步数":"Z undo  ·  R restart  ·  goal: fewest moves","点击镜面旋转  ·  Z 撤销  ·  R 重开本关  ·  H 提示  ·  ⊞ 选关":"Click to rotate  ·  Z undo  ·  R restart  ·  H hint  ·  ⊞ levels","分光镜：光会直行通过，同时 90° 分出一束 —— 转动它，让两束各打一个核心":"PRISM: light passes straight through and also splits off at 90°. Turn it so both beams hit a core.","分光镜：光直行通过，同时 90° 分出一束 —— 两个核心都要点亮":"PRISM: light passes straight through and splits at 90°. Both cores must be lit.","传送门：光从一端进入，会从另一端以相同方向射出 —— 用它绕过整面墙":"PORTAL: light entering one end leaves the other in the same direction. Use it to get past a wall.","传送门：光从一端进入，会从另一端以相同方向射出":"PORTAL: light entering one end leaves the other in the same direction.","灰圈镜面是锁死的，转不动 —— 光路只能绕着它走":"Mirrors with a grey ring are locked. Route around them.","今日所有人同一道题":"everyone gets the same puzzle today","光路 · LUMEN":"LUMEN","⊞ 选关":"⊞ LEVELS","选关":"LEVELS"};
     var RULES = [["^已通关 (\\d+) 关$","Cleared $1 levels"],["^总 (\\d+)$","Total $1"],["^每日一关 · (\\d+) 月 (\\d+) 日$","Daily · $1/$2"],["^已挑战 (\\d+) 步$","$1 moves"],["^LUMEN 每日 (\\d+)\\.(\\d+)\\.(\\d+) · (\\d+) 步 (\\S+) · 最优 (\\d+) 步，你来试试$","LUMEN Daily $1.$2.$3 · $4 moves $5 · PAR $6. Beat it!"],["^· 今天所有人同一道题$","· same puzzle for everyone today"]];
-    var FRAGS = [["点击镜面旋转","Click to rotate"],["重开本关","restart level"],["撤销","undo"],["提示","hint"],["最优","PAR"],["步数","moves"],["步"," moves"],["核心","core"],["镜面","mirror"],["分光镜","prism"],["传送门","portal"],["关"," levels"],["每日","daily"],["开始","start"]];
+    var FRAGS = [["重置进度","RESET PROGRESS"],["选关","LEVELS"],["目标：用最少的","goal: fewest"],["点击镜面旋转","Click to rotate"],["重开本关","restart level"],["撤销","undo"],["提示","hint"],["最优","PAR"],["步数","moves"],["步"," moves"],["核心","core"],["镜面","mirror"],["分光镜","prism"],["传送门","portal"],["每日","daily"],["开始","start"]];
     var RX = [];
     for (var i = 0; i < RULES.length; i++) RX.push([new RegExp(RULES[i][0]), RULES[i][1]]);
     FRAGS.sort(function (a, b) { return b[0].length - a[0].length; });
@@ -1473,7 +1476,10 @@
       if (LANG !== 'en') return null;
       var t = s.trim();
       if (!t) return null;
-      if (EXACT[t] !== undefined) return EXACT[t];
+      if (EXACT[t] !== undefined) {
+        var e = EXACT[t];
+        return e === t ? null : e;
+      }
       for (var i = 0; i < RX.length; i++) {
         if (RX[i][0].test(t)) return t.replace(RX[i][0], RX[i][1]);
       }
@@ -1487,39 +1493,50 @@
       return hit ? out : null;
     }
 
+    var busy = false;
+
     function walk(n) {
       if (!n) return;
       if (n.nodeType === 3) {
         var v = tf(n.nodeValue);
-        if (v !== null) n.nodeValue = v;
+        if (v !== null && v !== n.nodeValue) n.nodeValue = v;
         return;
       }
       if (n.nodeType !== 1) return;
       var tag = n.tagName;
       if (tag === 'SCRIPT' || tag === 'STYLE') return;
-      if (n.title) { var tv = tf(n.title); if (tv !== null) n.title = tv; }
-      if (n.placeholder) { var pv = tf(n.placeholder); if (pv !== null) n.placeholder = pv; }
+      if (n.getAttribute && n.getAttribute('data-i18n-skip')) return;
+      if (n.title) { var tv = tf(n.title); if (tv !== null && tv !== n.title) n.title = tv; }
+      if (n.placeholder) { var pv = tf(n.placeholder); if (pv !== null && pv !== n.placeholder) n.placeholder = pv; }
       var kids = n.childNodes;
       for (var i = 0; i < kids.length; i++) walk(kids[i]);
     }
 
     if (LANG === 'en') {
-      if (document.title) { var dt = tf(document.title); if (dt !== null) document.title = dt; }
+      if (document.title) {
+        var dt = tf(document.title);
+        if (dt !== null && dt !== document.title) document.title = dt;
+      }
       walk(document.body);
       try {
         new MutationObserver(function (ms) {
-          for (var i = 0; i < ms.length; i++) {
-            var a = ms[i].addedNodes;
-            for (var j = 0; j < a.length; j++) walk(a[j]);
-            if (ms[i].type === 'characterData') walk(ms[i].target);
-          }
+          if (busy) return;
+          busy = true;
+          try {
+            for (var i = 0; i < ms.length; i++) {
+              var a = ms[i].addedNodes;
+              for (var j = 0; j < a.length; j++) walk(a[j]);
+              if (ms[i].type === 'characterData') walk(ms[i].target);
+            }
+          } finally { busy = false; }
         }).observe(document.body, { childList: true, subtree: true, characterData: true });
       } catch (e) { }
     }
 
     var btn = document.createElement('button');
+    btn.setAttribute('data-i18n-skip', '1');
     btn.textContent = LANG === 'en' ? '中文' : 'EN';
-    btn.title = LANG === 'en' ? '切换到中文' : 'Switch to English';
+    btn.title = LANG === 'en' ? '切换中文' : 'Switch to English';
     btn.style.cssText = 'position:fixed;right:12px;top:10px;z-index:999;' +
       'padding:5px 9px;border-radius:7px;cursor:pointer;font:700 11px/1 system-ui,sans-serif;' +
       'letter-spacing:.06em;opacity:.72;transition:opacity .2s;' +
