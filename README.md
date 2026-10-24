@@ -1,14 +1,15 @@
-# Three Little Games · 三个小游戏
+# Four Little Games · 四个小游戏
 
-Three tiny browser games, each a **single self-contained HTML file** — no build step, no dependencies, no external assets. All art is drawn at runtime on `<canvas>` (or in the DOM), all music and sound effects are synthesised live with the Web Audio API. There is not a single image, font, or audio file in this repository.
+Four tiny browser games, each a **single self-contained HTML file** — no build step, no dependencies, no external assets. All art is drawn at runtime on `<canvas>` (or in the DOM), all music and sound effects are synthesised live with the Web Audio API. There is not a single image, font, or audio file in this repository.
 
-Each game has a **中文 / EN** toggle in the top-right corner. It picks your browser language on first load and remembers your choice.
+Each game has a **中文 / EN** toggle at the left edge of the screen. It picks your browser language on first load and remembers your choice.
 
 | Game | Genre | Session length |
 |---|---|---|
 | [NEON DODGE](neon-dodge/index.html) | Real-time arcade · dodge + graze combo | 40 s – 2 min |
 | [LUMEN](lumen/index.html) | Turn-based puzzle · route the light beam | 30 s – 3 min per level |
 | [DICE DELVE](dice-delve/index.html) | Turn-based roguelike · dice allocation | 4 – 6 min |
+| [TWINRAIL](twinrail/index.html) | Real-time two-lane runner · one-button rail switching | 1 – 4 min |
 
 **Run it:** double-click any `index.html`, or serve the folder from any static server. Nothing to install.
 
@@ -78,6 +79,21 @@ Balance isn't guesswork: a greedy-policy bot plays 300 simulated runs and the nu
 
 ---
 
+## 4. TWINRAIL
+
+![TWINRAIL](shots/twinrail.png)
+
+Two rails, one action. You run along the upper or lower rail and the only input is **switch rail** — there is no jump.
+
+- Touching a block on your rail, or passing over a break in it, ends the run
+- **While you are between the rails you are on neither of them** — both are safe. You only count as "on a rail" once you have landed on it
+- Blocks come in single, break, and alternating pairs (two switches back to back)
+- Coins sit **on the blocked rail, just before the block** — taking them means delaying your switch
+
+Speed climbs from 430 to 980 px/s, and hazard spacing is tied to the switch animation so every pattern stays clearable.
+
+`Space` / click switch rail · `P` pause · `R` restart · `M` mute
+
 ## How these were built and checked
 
 All three are plain JavaScript in one file each — no framework, no bundler, no minification.
@@ -87,6 +103,7 @@ Core logic was verified headlessly in Node with minimal DOM/canvas stubs:
 - **NEON DODGE** — a ~5,000-frame smoke test covering start, dash, pause, death, results and restart
 - **LUMEN** — a 100-level audit: independently re-enumerates PAR, checks that every mirror's drawn orientation matches the orientation used by the beam, replays the optimal solution to confirm it wins, and verifies that locked mirrors actually sit on the light path
 - **DICE DELVE** — 300 simulated runs for balance, plus a save/restore test that reloads the page-equivalent state and a strict-DOM check that every element the code touches really exists
+- **TWINRAIL** — collision-edge tests (a 1 px gap must survive, a 1 px overlap must die), lane-attribution tests at both ends of the switch animation, and a bot run to confirm every generated pattern is clearable
 
 That last check earned its keep: an earlier build referenced a removed element id, and the render function threw silently before it ever reached the dice — the HUD drew, the dice didn't. The permissive stub hid it; the strict one caught it immediately.
 
