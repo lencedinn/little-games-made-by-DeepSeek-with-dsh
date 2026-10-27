@@ -1,6 +1,6 @@
-# Four Little Games · 四个小游戏
+# Five Little Games · 五个小游戏
 
-Four tiny browser games, each a **single self-contained HTML file** — no build step, no dependencies, no external assets. All art is drawn at runtime on `<canvas>` (or in the DOM), all music and sound effects are synthesised live with the Web Audio API. There is not a single image, font, or audio file in this repository.
+Five tiny browser games, each a **single self-contained HTML file** — no build step, no dependencies, no external assets. All art is drawn at runtime on `<canvas>` (or in the DOM), all music and sound effects are synthesised live with the Web Audio API. There is not a single image, font, or audio file in this repository.
 
 Each game has a **中文 / EN** toggle at the left edge of the screen. It picks your browser language on first load and remembers your choice.
 
@@ -10,6 +10,7 @@ Each game has a **中文 / EN** toggle at the left edge of the screen. It picks 
 | [LUMEN](lumen/index.html) | Turn-based puzzle · route the light beam | 30 s – 3 min per level |
 | [DICE DELVE](dice-delve/index.html) | Turn-based roguelike · dice allocation | 4 – 6 min |
 | [TWINRAIL](twinrail/index.html) | Real-time two-lane runner · one-button rail switching | 1 – 4 min |
+| [BASTION](bastion/index.html) | Real-time strategy · grid tower defense | 8 – 15 min |
 
 **Run it:** double-click any `index.html`, or serve the folder from any static server. Nothing to install.
 
@@ -94,6 +95,22 @@ Speed climbs from 430 to 980 px/s, and hazard spacing is tied to the switch anim
 
 `Space` / click switch rail · `P` pause · `R` restart · `M` mute
 
+## 5. BASTION
+
+![BASTION](shots/bastion.png)
+
+A grid tower defense. Enemies walk a fixed lane; you never control them — you only decide **what to build and where**.
+
+- Click empty ground to build. `1` cannon · `2` frost · `3` sniper
+- Click an existing tower to **upgrade** it (3 levels). Right-click to **sell** for 60% of what you put in
+- Hover any cell to preview its range before you commit
+
+Three towers with different jobs: the cannon is cheap damage, the frost tower barely scratches anything but its 45% slow makes everything else hit harder, and the sniper pays for its cost with reach and single-hit damage.
+
+Enemies come in four flavours — grunts, fast runners, **armoured** units that soak a flat 9 damage from every hit (which is why cannons alone eventually stop working), and bosses. Twelve waves, three maps of different path lengths, and the gold economy is tuned so that spreading cheap towers and consolidating into upgraded ones are both real options.
+
+`P` pause · `F` 2× speed · `M` mute · `R` restart
+
 ## How these were built and checked
 
 All three are plain JavaScript in one file each — no framework, no bundler, no minification.
@@ -104,6 +121,7 @@ Core logic was verified headlessly in Node with minimal DOM/canvas stubs:
 - **LUMEN** — a 100-level audit: independently re-enumerates PAR, checks that every mirror's drawn orientation matches the orientation used by the beam, replays the optimal solution to confirm it wins, and verifies that locked mirrors actually sit on the light path
 - **DICE DELVE** — 300 simulated runs for balance, plus a save/restore test that reloads the page-equivalent state and a strict-DOM check that every element the code touches really exists
 - **TWINRAIL** — collision-edge tests (a 1 px gap must survive, a 1 px overlap must die), lane-attribution tests at both ends of the switch animation, and a bot run to confirm every generated pattern is clearable
+- **BASTION** — thousands of simulated runs with two build bots (pure cannon vs. mixed) across all three maps, plus per-mechanism tests for armour, upgrades, slow, sell refunds and wave economy
 
 That last check earned its keep: an earlier build referenced a removed element id, and the render function threw silently before it ever reached the dice — the HUD drew, the dice didn't. The permissive stub hid it; the strict one caught it immediately.
 
